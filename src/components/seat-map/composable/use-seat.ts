@@ -18,9 +18,8 @@ export function useSeat() {
   function initSocket() {
     if (socket) return
     socket = io(import.meta.env.VITE_API_BASE_URL)
-    socket.on('seatUpdated', upd => {
-      const i = seats.value.findIndex(s => s.label === upd.label)
-      if (i >= 0) seats.value[i] = { ...seats.value[i], ...upd }
+    socket.on('seatUpdated', (newSeats) => {
+      seats.value = newSeats
     })
   }
 
@@ -86,8 +85,7 @@ export function useSeat() {
   const booksTotal = computed(() => programBookCount.value * 200)
   const grandTotal = computed(() => seatsTotal.value + booksTotal.value)
 
-  const refresh = async () => {
-    await fetchSeats()
+  const reset = () => {
     selected.value.clear()
   }
 
@@ -103,6 +101,6 @@ export function useSeat() {
     booksTotal,
     grandTotal,
     reserve,
-    refresh,
+    reset,
   }
 }

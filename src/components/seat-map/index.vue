@@ -87,7 +87,7 @@ export default defineComponent({
       grandTotal,
       reserve,
       toggleSeat,
-      refresh,
+      reset,
     } = useSeat()
 
     const selectedSeatLabels = computed(() => selectedSeats.value.map(s => `${s.row}${s.col}`))
@@ -148,11 +148,10 @@ export default defineComponent({
       try {
         isLoading.value = true
         const res = await reserve(data)
-        console.log(res)
       } catch (error) {
         console.error('預訂失敗:', error)
       } finally {
-        await refresh()
+        reset()
         isLoading.value = false
         isSuccessPanelVisible.value = true
       }
