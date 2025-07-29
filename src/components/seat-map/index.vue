@@ -12,17 +12,20 @@
         </div>
         <template v-for="(sectionSeats, section) in sections" :key="section">
           <div :class="$style[section]">
-            <template v-for="seat in sectionSeats" :key="seat.text">
+            <template v-for="(seat, index) in sectionSeats" :key="seat.text || `${section}-${index}`">
+              <SeatItem
+                v-if="seat.row && seat.col"
+                :seat="seat"
+                :mode="mode"
+                :is-selected="selectedSeatLabels.includes(`${seat.row}${seat.col}`)"
+                :index="index"
+                @click="onToggleSeat"
+              />
               <div 
+                v-else
                 class="seat"
                 :class="seat.class"
-                @click="onToggleSeat(seat)"
-              >
-                <div>{{ seat.text }}</div>
-                <div v-if="seat.reservedBy" class="ml-1 text-xs text-nowrap overflow-hidden">
-                  {{ seat.reservedBy }}
-                </div>
-              </div>
+              />
             </template>
           </div>
         </template>
@@ -52,6 +55,7 @@ import type { Seat, SeatSection, SectionRow, SeatPriceColor, SeatMapMode } from 
 import SubmitPanel from '@/components/submit-panel.vue'
 import SuccessPanel from '@/components/success-panel.vue'
 import BottomPanel from './components/bottom-panel.vue'
+import SeatItem from './components/seat-item.vue'
 
 export default defineComponent({
   name: 'SeatMap',
@@ -59,6 +63,7 @@ export default defineComponent({
     SubmitPanel,
     SuccessPanel,
     BottomPanel,
+    SeatItem,
   },
   props: {
     mode: {
@@ -87,23 +92,6 @@ export default defineComponent({
 
     const selectedSeatLabels = computed(() => selectedSeats.value.map(s => `${s.row}${s.col}`))
 
-    const getSeatColor = (seat: Seat): string => {
-      if (!seat.status) return 'bg-gray-200'
-      if (!seat.price) return 'bg-gray-200'
-
-      return (SEAT_PRICE_COLOR as SeatPriceColor)[String(seat.price)][seat.status] || SEAT_COLOR[seat.status]
-    }
-
-    const getSeatClasses = (seat: Seat, index: number): { [key: string]: boolean } => ({
-      [SEAT_COLOR[seat.status]]: true,
-      'cursor-not-allowed': seat.status !== SEAT_STATUS.AVAILABLE,
-      [getSeatColor(seat)]: true,
-      ' saturate-500 ring ring-offset-transparent ring-white ring-offset-op-50': selectedSeatLabels.value.includes(`${seat.row}${seat.col}`),
-      'indent-seat': INDENT_ROWS.includes(seat.row) && index === 0,
-      'w-seat': seat.row === 'W',
-      'transition-all duration-200': true,
-    })
-
     const getIsIndent = (seat: { row: string }, index: number): boolean => 
       INDENT_ROWS.includes(seat.row) && index === 0
     
@@ -126,25 +114,17 @@ export default defineComponent({
             }
 
             if (!rawSeat) {
-              const seatData: Seat = {
+              return {
                 ...target,
                 text: `${target.row}${target.col}`,
                 status: SEAT_STATUS.UNAVAILABLE,
                 reservedBy: '',
               }
-              return {
-                ...seatData,
-                class: getSeatClasses(seatData, index)
-              }
             }
 
             return {
-              ...target,
+              ...rawSeat,
               text: `${target.row}${target.col}`,
-              class: getSeatClasses(rawSeat, index),
-              status: rawSeat.status,
-              price: rawSeat.price,
-              reservedBy: rawSeat.reservedBy,
             }
           })
         )

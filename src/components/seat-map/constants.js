@@ -653,8 +653,8 @@ export const SEAT_COLOR = {
   [SEAT_STATUS.AVAILABLE]: 'cursor-pointer hover:saturate-500',
   [SEAT_STATUS.BOOKED]: 'saturate-50',
   [SEAT_STATUS.UNAVAILABLE]: 'saturate-50',
-  [SEAT_STATUS.VIP_0]: 'bg-blue-800 text-gray-200',
-  [SEAT_STATUS.VIP_10]: 'bg-purple-800 text-gray-200'
+  [SEAT_STATUS.VIP_0]: 'bg-blue-800 !text-gray-200',
+  [SEAT_STATUS.VIP_10]: 'bg-purple-800 !text-gray-200'
 }
 
 export const SEAT_PRICE_COLOR = {

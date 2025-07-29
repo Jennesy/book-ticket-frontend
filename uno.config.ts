@@ -24,6 +24,7 @@ export default defineConfig({
     'bg-slate-400',
     'bg-pink-400',
     'text-gray-200',
+    '!text-gray-200',
     'filter', 
     'brightness-75',
   ],
