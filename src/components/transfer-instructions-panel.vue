@@ -5,7 +5,7 @@
     </template>
     <div class='flex flex-col gap-6'>
       <div class='flex gap-2 items-center'>
-        <div class='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-xl font-bold'> 1 </div>
+        <div class='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0'> 1 </div>
         <div class='text-lg'>前往<a href='https://docs.google.com/spreadsheets/d/1b9FVc7L0r_NvNOFQJsuUSoazTQKjKubuInqlOjRiM0c/edit?usp=sharing' target='_blank'>
             <span class="inline-flex items-center translate-y-1">
               <v-icon>mdi-google-spreadsheet</v-icon>
@@ -18,7 +18,7 @@
         </div>
       </div>
       <div class='flex gap-2 items-start'>
-        <div class='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-xl font-bold'> 2 </div>
+        <div class='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0'> 2 </div>
         <div class='flex flex-col text-lg'>
           <div class='mb-2'>匯款，並在備著寫上<span class='font-bold border-b-solid'>訂單編碼</span></div>
           <div class='px-6 py-2 bg-gray-100 rounded-xl'>
