@@ -1,31 +1,63 @@
 <template>
-  <div class='flex items-center justify-center text-size-5.5 gap-2 translate-x-4 text-gray-600 font-bold mb-4'>
-    <div>管理後台</div>
+  <div class="admin-page">
+    <h1>管理員後台</h1>
+    
+    <!-- Test CommonTabs -->
+    <div class="tabs-container">
+      <Tabs
+        v-model="activeTab"
+        :tabs="tabItems"
+        itemClass="pa-0"
+      >
+        <template #tab-seatMap>
+          <div class="tab-content">
+            <SeatMap mode="edit" />
+          </div>
+        </template>
+
+        <template #tab-orders>
+          <div class="tab-content">
+            <OrderList />
+          </div>
+        </template>
+      </Tabs>
+    </div>
   </div>
-  <SeatMap mode='edit' />
 </template>
 
-<script>
-  import { ref } from 'vue'
-  import SeatMap from '@/components/seat-map'
-  import InfoPanel from '@/components/info-panel'
+<script setup lang="ts">
+import { ref } from 'vue'
+import Tabs from '@/components/common/tabs.vue'
+import SeatMap from '@/components/seat-map/index.vue'
+import OrderList from '@/components/admin/order-list.vue'
 
-  export default {
-    components: {
-      SeatMap,
-      InfoPanel,
-    },
-    setup() {
-      const isInfoPanelVisible = ref(false)
+const activeTab = ref('seatMap')
 
-      const onInfoPanelOpen = () => isInfoPanelVisible.value = true
-      const onInfoPanelClose = () => isInfoPanelVisible.value = false
-
-      return {
-        isInfoPanelVisible,
-        onInfoPanelOpen,
-        onInfoPanelClose,
-      }
-    }
+const tabItems = [
+  {
+    title: '座位表管理',
+    value: 'seatMap',
+    icon: 'mdi-seat-outline'
+  },
+  {
+    title: '訂單清單',
+    value: 'orders',
+    icon: 'mdi-format-list-bulleted'
   }
+]
 </script>
+
+<style scoped>
+.admin-page {
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.tabs-container {
+  margin-top: 20px;
+}
+
+.tab-content {
+  min-height: 100vh;
+}
+</style>

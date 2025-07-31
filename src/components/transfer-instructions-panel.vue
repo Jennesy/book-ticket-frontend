@@ -9,7 +9,7 @@
         <div class='text-lg'>前往<a href='https://docs.google.com/spreadsheets/d/1b9FVc7L0r_NvNOFQJsuUSoazTQKjKubuInqlOjRiM0c/edit?usp=sharing' target='_blank'>
             <span class="inline-flex items-center translate-y-1">
               <v-icon>mdi-google-spreadsheet</v-icon>
-              <div>試算表</div>
+              <div>訂單列表</div>
             </span>
           </a>
           ，確認 

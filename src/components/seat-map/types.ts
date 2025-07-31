@@ -1,4 +1,5 @@
 export interface Seat {
+  _id?: string
   row: string
   col: number
   text: string

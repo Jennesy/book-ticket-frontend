@@ -1,6 +1,14 @@
 <template>
   <div v-if='isLoading' class='fixed inset-0 bg-black/50 z-3 text-white text-xl grid place-items-center transition-all duration-200'>Loading...</div>
-  <BottomPanel v-if='isBookMode' :selected-seats='formattedSelectedSeats' :grandTotal='grandTotal' @submit='onSubmit' />
+  <BottomPanel 
+    v-if='!isViewMode' 
+    :selected-seats='formattedSelectedSeats' 
+    :grandTotal='grandTotal' 
+    :mode='mode'
+    v-model:editPropertyName='editPropertyName'
+    v-model:editNewValue='editNewValue'
+    @submit='onSubmit' 
+  />
   <div class="overflow-scroll bg-gray-700 m-2 mb-50">
     <div class="p-8 w-fit">
       <div class="grid scale-80 mobile:scale-100" :class="$style.seats">
@@ -75,8 +83,10 @@ export default defineComponent({
     const isLoading = ref(false)
     const isSubmitPanelVisible = ref(false)
     const isSuccessPanelVisible = ref(false)
+    const editPropertyName = ref<'status' | 'price'>('status')
+    const editNewValue = ref<string | number>('')
 
-    const isBookMode = computed(() => props.mode === 'book')
+    const isViewMode = computed(() => props.mode === 'view')
 
     const {
       seats,
@@ -88,6 +98,7 @@ export default defineComponent({
       reserve,
       toggleSeat,
       reset,
+      editSelectedSeats,
     } = useSeat()
 
     const selectedSeatLabels = computed(() => selectedSeats.value.map(s => `${s.row}${s.col}`))
@@ -157,13 +168,49 @@ export default defineComponent({
       }
     }
 
+    const onEdit = async () => {
+      try {
+        isLoading.value = true
+        const updates: { status?: string; price?: number; reservedBy?: string } = {}
+        if (editPropertyName.value === 'status') {
+          updates.status = editNewValue.value as string
+        } else if (editPropertyName.value === 'price') {
+          updates.price = Number(editNewValue.value)
+        }
+        const result = await editSelectedSeats(updates)
+        
+        // Show skipped seat reasons if any
+        if (result.skippedSeats && result.skippedSeats.length > 0) {
+          const reasons = result.skippedSeats.map(seat => 
+            `${seat.row}${seat.col}: ${seat.reason}`
+          ).join('\n')
+          alert(`跳過的座位:\n${reasons}`)
+        }
+      } catch (error) {
+        console.error('編輯失敗:', error)
+      } finally {
+        reset()
+        editPropertyName.value = 'status'
+        editNewValue.value = ''
+        isLoading.value = false
+      }
+    }
+
     const onToggleSeat = (seat: Seat) => {
       if (props.mode === 'view') return
-      if (seat.status !== SEAT_STATUS.AVAILABLE) return
+      if (props.mode === 'book' && seat.status !== SEAT_STATUS.AVAILABLE) return
       toggleSeat(seat)
     }
 
-    const onSubmit = () => isSubmitPanelVisible.value = true
+    const onSubmit = () => {
+      if (props.mode === 'edit') {
+        onEdit()
+      }
+      if (props.mode === 'book') {
+        isSubmitPanelVisible.value = true
+      } 
+      return
+    }
     const onSubmitPanelClose = () => isSubmitPanelVisible.value = false
     const onSuccessPanelClose = () => isSuccessPanelVisible.value = false
 
@@ -196,7 +243,9 @@ export default defineComponent({
       SEAT_PRICE_COLOR,
       isSubmitPanelVisible,
       isSuccessPanelVisible,
-      isBookMode,
+      isViewMode,
+      editPropertyName,
+      editNewValue,
     }
   },
 })

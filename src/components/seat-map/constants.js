@@ -649,6 +649,15 @@ export const SEAT_STATUS = {
   VIP_10: 'VIP-10'
 };
 
+export const SEAT_PRICE = {
+  400: 400,
+  600: 600,
+  800: 800,
+  1000: 1000,
+  1200: 1200,
+  2000: 2000
+};
+
 export const SEAT_COLOR = {
   [SEAT_STATUS.AVAILABLE]: 'cursor-pointer hover:saturate-500',
   [SEAT_STATUS.BOOKED]: 'saturate-50',
@@ -658,28 +667,34 @@ export const SEAT_COLOR = {
 }
 
 export const SEAT_PRICE_COLOR = {
-  400: {
+  [SEAT_PRICE[400]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-lightblue-300',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-lightblue-400',
     [SEAT_STATUS.BOOKED]: 'bg-lightblue-400',
   },
-  600: {
+  [SEAT_PRICE[600]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-green-300',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-green-300 filter brightness-75',
     [SEAT_STATUS.BOOKED]: 'bg-green-300 filter brightness-75',
   },
-  800: {
+  [SEAT_PRICE[800]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-yellow-300',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-yellow-400',
     [SEAT_STATUS.BOOKED]: 'bg-yellow-400',
   },
-  1000: {
+  [SEAT_PRICE[1000]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-orange-300',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-orange-400',
     [SEAT_STATUS.BOOKED]: 'bg-orange-400',
   },
-  1200: {
+  [SEAT_PRICE[1200]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-red-300',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-red-300 filter brightness-75',
     [SEAT_STATUS.BOOKED]: 'bg-red-300 filter brightness-75',
   },
-  2000: {
+  [SEAT_PRICE[2000]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-slate-400',
+    [SEAT_STATUS.UNAVAILABLE]: 'bg-slate-500',
     [SEAT_STATUS.BOOKED]: 'bg-slate-500',
   },
 }

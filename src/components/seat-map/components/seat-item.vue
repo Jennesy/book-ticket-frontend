@@ -34,16 +34,18 @@ const emit = defineEmits<{
   click: [seat: Seat]
 }>()
 
-const isInteractive = computed(() => 
-  props.mode !== 'view' && props.seat.status === SEAT_STATUS.AVAILABLE
-)
+const isInteractive = computed(() => {
+  if (props.mode === 'view') return false
+  if (props.mode === 'edit') return true
+  return props.seat.status === SEAT_STATUS.AVAILABLE
+})
 
 const seatClasses = computed(() => {
   const classes = {
     'seat transition-all duration-200': true,
     [getSeatColor(props.seat)]: true,
-    'cursor-not-allowed': props.seat.status !== SEAT_STATUS.AVAILABLE,
-    'cursor-pointer hover:saturate-500': props.seat.status === SEAT_STATUS.AVAILABLE,
+    'cursor-not-allowed': !isInteractive.value,
+    'cursor-pointer hover:saturate-500': isInteractive.value,
     'saturate-500 ring ring-offset-transparent ring-white ring-offset-op-50': props.isSelected,
     'indent-seat': INDENT_ROWS.includes(props.seat.row) && props.index === 0,
     'w-seat': props.seat.row === 'W',

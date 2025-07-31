@@ -1,9 +1,10 @@
 // src/composables/useSeat.js
 import { ref, computed, onMounted } from 'vue'
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
+import { DefaultEventsMap } from '@socket.io/component-emitter'
 
-let socket
+let socket: Socket<DefaultEventsMap, DefaultEventsMap>
 
 export function useSeat() {
   const seats = ref<Seat[]>([])
@@ -89,6 +90,54 @@ export function useSeat() {
     selected.value.clear()
   }
 
+  async function editSelectedSeats(updates: { price?: number; status?: string; reservedBy?: string }) {
+    console.log('editSelectedSeats', updates)
+    if (selectedSeats.value.length === 0) {
+      throw new Error('No seats selected')
+    }
+    
+    const seatsToUpdate = selectedSeats.value
+      .filter(seat => seat._id)
+      .map(seat => ({
+        _id: seat._id,
+        row: seat.row,
+        col: seat.col,
+        status: updates.status ?? seat.status,
+        reservedBy: updates.reservedBy ?? seat.reservedBy,
+        price: updates.price ?? seat.price
+      }))
+    
+    if (seatsToUpdate.length === 0) {
+      throw new Error('No valid seats to update')
+    }
+    
+    const payload = { seats: seatsToUpdate }
+    
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      
+      const result = await res.json()
+      
+      if (res.ok && result.updatedSeats?.length > 0) {
+        result.updatedSeats.forEach(updatedSeat => {
+          const seatIndex = seats.value.findIndex(s => s._id === updatedSeat._id)
+          if (seatIndex !== -1) {
+            Object.assign(seats.value[seatIndex], updatedSeat)
+          }
+        })
+      }
+      
+      return result
+    } catch (error) {
+      console.error('Failed to edit selected seats:', error)
+      throw error
+    }
+  }
+
   return {
     seats,
     selectedSeats,
@@ -102,5 +151,6 @@ export function useSeat() {
     grandTotal,
     reserve,
     reset,
+    editSelectedSeats,
   }
 }
