@@ -45,10 +45,37 @@
       </div>
     </div>
 
+    <!-- Program Book Section -->
+    <div v-if="mode === 'book'">
+      <div class='flex items-center justify-between'>
+        <div class='flex items-center gap-2'>
+          <span>節目冊 (NT$200/本)：</span>
+          <div class='flex items-center gap-2'>
+            <Button
+              prepend-icon="mdi-minus"
+              size="x-small"
+              color='red'
+              variant="outlined"
+              :disabled="programBookCount <= 0"
+              @click="onProgramBookChange(programBookCount - 1)"
+            />
+            <span class='w-8 text-center'>{{ programBookCount }}</span>
+            <Button
+              prepend-icon="mdi-plus"
+              size="x-small"
+              color='primary'
+              variant="outlined"
+              @click="onProgramBookChange(programBookCount + 1)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class='relative mt-4'>
-      <div v-if="mode === 'book'" class='font-bold'>總計：NT${{ grandTotal }}</div>
+      <div v-if="mode === 'book' && grandTotal" class='font-bold'>總計：NT${{ grandTotal }}</div>
       <Button
-        v-if='selectedSeats.length'
+        v-if='selectedSeats.length || (mode === "book" && programBookCount > 0)'
         color='primary'
         variant='elevated'
         class='!absolute right-0 bottom-0'
@@ -91,6 +118,10 @@
         type: [String, Number],
         default: '',
       },
+      programBookCount: {
+        type: Number,
+        default: 0,
+      },
     },
     setup(props, { emit }) {
       const onSubmit = () => {
@@ -105,6 +136,10 @@
         emit('update:editNewValue', value)
       }
 
+      const onProgramBookChange = (value) => {
+        emit('update:programBookCount', Math.max(0, value))
+      }
+
       return {
         SEAT_PRICE_COLOR,
         SEAT_STATUS,
@@ -112,6 +147,7 @@
         onSubmit,
         onEditPropertyChange,
         onEditValueChange,
+        onProgramBookChange,
       }
     }
   }

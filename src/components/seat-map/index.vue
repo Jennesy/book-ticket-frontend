@@ -7,6 +7,7 @@
     :mode='mode'
     v-model:editPropertyName='editPropertyName'
     v-model:editNewValue='editNewValue'
+    v-model:programBookCount='programBookCount'
     @submit='onSubmit' 
   />
   <div class="overflow-scroll bg-gray-700 m-2 mb-50">
@@ -40,16 +41,6 @@
       </div>
     </div>
   </div>
-
-  <!-- <div class="mt-4 flex items-center gap-2">
-    <input
-      type="number"
-      v-model="programBookCount"
-      min="0"
-      class="border rounded px-2 py-1"
-    />
-    <span>本節目冊</span>
-  </div> -->
 
   <SubmitPanel v-if="isSubmitPanelVisible" :seats='formattedSelectedSeats' :total='grandTotal' @submit="onReserve" @close="onSubmitPanelClose" />
   <SuccessPanel v-if="isSuccessPanelVisible" @close="onSuccessPanelClose" />

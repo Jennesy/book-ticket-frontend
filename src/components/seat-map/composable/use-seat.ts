@@ -88,6 +88,7 @@ export function useSeat() {
 
   const reset = () => {
     selected.value.clear()
+    programBookCount.value = 0
   }
 
   async function editSelectedSeats(updates: { price?: number; status?: string; reservedBy?: string }) {

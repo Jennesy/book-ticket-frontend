@@ -27,12 +27,17 @@
       ></v-text-field>
     </div>
     <div :class='drawerClass' class='mt-8'>
-      <div class='flex items-center gap-2 mb-1'>
-        <span>座位：</span>
-        <span class='text-gray-500'>{{ calculation }}</span>
+      <div v-if="seats.length > 0">
+        <div class='flex items-center gap-2 mb-1'>
+          <span>座位：</span>
+          <span class='text-gray-500'>{{ calculation }}</span>
+        </div>
+        <div class='flex flex-wrap gap-1'>
+          <div v-for='seat in seats' class='w-15 text-center p-1 border border-gray-400 rounded-md' :key='seat.text'>{{seat.text}}</div>
+        </div>
       </div>
-      <div class='flex flex-wrap gap-1'>
-        <div v-for='seat in seats' class='w-15 text-center p-1 border border-gray-400 rounded-md' :key='seat.text'>{{seat.text}}</div>
+      <div v-else class='text-gray-500 mb-2'>
+        僅購買節目冊，無座位預訂
       </div>
       <div class='mt-2 font-bold'>總計：NT${{ total }}</div>
     </div>
