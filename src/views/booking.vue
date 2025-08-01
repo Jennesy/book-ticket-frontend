@@ -1,6 +1,6 @@
 <template>
   <!-- Ticketing Closed Message -->
-  <div v-if="!ticketingStatus.open" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+  <div v-if="isTicketingClosed" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
     <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
       <div class="mb-4">
         <v-icon size="48" color="error">mdi-ticket-outline</v-icon>
@@ -32,7 +32,7 @@
 </template>
 
 <script>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import SeatMap from '@/components/seat-map'
   import InfoPanel from '@/components/info-panel'
@@ -47,7 +47,8 @@
     },
     setup() {
       const router = useRouter()
-      const { ticketingStatus } = useTicketingStatus()
+      const { ticketingStatus, isInitialized } = useTicketingStatus()
+      const isTicketingClosed = computed(() => !ticketingStatus.value.open && isInitialized.value)
       const isInfoPanelVisible = ref(false)
 
       const onInfoPanelOpen = () => isInfoPanelVisible.value = true
@@ -58,7 +59,7 @@
       }
 
       return {
-        ticketingStatus,
+        isTicketingClosed,
         isInfoPanelVisible,
         onInfoPanelOpen,
         onInfoPanelClose,

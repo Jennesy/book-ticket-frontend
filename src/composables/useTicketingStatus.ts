@@ -14,6 +14,7 @@ export function useTicketingStatus() {
   })
 
   const loading = ref(false)
+  const isInitialized = ref(false)
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
   const fetchTicketingStatus = async () => {
@@ -74,8 +75,9 @@ export function useTicketingStatus() {
     }
   }
 
-  onMounted(() => {
-    fetchTicketingStatus()
+  onMounted(async () => {
+    await fetchTicketingStatus()
+    isInitialized.value = true
     initSocket()
   })
 
@@ -84,6 +86,7 @@ export function useTicketingStatus() {
   })
 
   return {
+    isInitialized,
     ticketingStatus,
     loading,
     fetchTicketingStatus,
