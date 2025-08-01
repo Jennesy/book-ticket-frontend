@@ -1,8 +1,13 @@
 <template>
   <div class="order-list pa-4">
-    <div class="d-flex justify-space-between align-center mb-4">
+    <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+      <span class="text-sm text-gray-500 flex items-center flex-wrap gap-1">
+        <v-icon>mdi-alert-circle</v-icon>
+        如果刪除訂單，請手動到<a href='https://docs.google.com/spreadsheets/d/1b9FVc7L0r_NvNOFQJsuUSoazTQKjKubuInqlOjRiM0c/edit?usp=sharing' target='_blank'>訂單列表</a>備註更新狀態
+      </span>
       <Button
-        color="primary ml-auto"
+        class="shrink-0"
+        color="primary"
         @click="refreshOrders"
         :loading="loading"
         prepend-icon="mdi-refresh"
