@@ -695,6 +695,6 @@ export const SEAT_PRICE_COLOR = {
   [SEAT_PRICE[2000]]: {
     [SEAT_STATUS.AVAILABLE]: 'bg-slate-400',
     [SEAT_STATUS.UNAVAILABLE]: 'bg-slate-500',
-    [SEAT_STATUS.BOOKED]: 'bg-slate-500 text-gray-200',
+    [SEAT_STATUS.BOOKED]: 'bg-slate-500 !text-gray-200',
   },
 }
