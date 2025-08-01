@@ -150,12 +150,19 @@ export default defineComponent({
       try {
         isLoading.value = true
         const res = await reserve(data)
+        // Show success panel if reservation succeeded
+        isSubmitPanelVisible.value = false
+        isSuccessPanelVisible.value = true
       } catch (error) {
         console.error('預訂失敗:', error)
+        // Show error message to user
+        const errorMessage = error instanceof Error ? error.message : '預訂失敗，請稍後再試'
+        alert(errorMessage)
+        isSubmitPanelVisible.value = false
       } finally {
+        // Reset selection regardless of success or failure
         reset()
         isLoading.value = false
-        isSuccessPanelVisible.value = true
       }
     }
 

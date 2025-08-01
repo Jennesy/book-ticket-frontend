@@ -35,32 +35,6 @@ export function useSeat() {
     else selected.value.add(seatId)
   }
 
-  async function syncToSheet(userInfo: { userName: string, date: Date, account: string }) {
-    const selectedSeatLabelsByPrice = selectedSeats.value.reduce((acc, seat) => {
-      acc[seat.price] = acc[seat.price] || []
-      acc[seat.price].push(`${seat.row}${seat.col}`)
-      return acc
-    }, {})
-    const payload = {
-      selectedSeatLabelsByPrice,
-      totalPrice: grandTotal.value,
-      programBookCount: programBookCount.value,
-      ...userInfo,
-      name: userInfo.userName,
-      date: userInfo.date.toLocaleDateString(),
-    }
-    try {
-      await fetch(import.meta.env.VITE_GSHEET_WEBHOOK, {
-        method: 'POST',
-        mode: 'no-cors', 
-        body: JSON.stringify(payload),
-      })
-      console.log('同步到試算表成功');
-    } catch (e) {
-      console.error('同步到試算表失敗', e);
-    }
-  }
-
   async function reserve(data: { userName: string , date: Date, account: string }) {
     const payload = {
       ...data,
@@ -68,13 +42,33 @@ export function useSeat() {
       seatLabels: selectedSeats.value.map(s => `${s.row}${s.col}`),
       programBookCount: programBookCount.value,
     }
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reserve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    await syncToSheet(payload)
-    return res.json()
+    
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reserve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      
+      const result = await res.json()
+      
+      if (!res.ok) {
+        // Handle specific error format from backend
+        const errorMessage = result.message || `HTTP ${res.status}: ${res.statusText}`
+        const unavailableSeats = result.unavailable || []
+        
+        if (unavailableSeats.length > 0) {
+          throw new Error(`${errorMessage}\n無法選擇的座位: ${unavailableSeats.join(', ')}`)
+        } else {
+          throw new Error(errorMessage)
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('Reservation failed:', error)
+      throw error
+    }
   }
 
   const selectedSeats = computed<Seat[]>(() => {
