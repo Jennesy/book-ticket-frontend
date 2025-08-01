@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   attempts: number
@@ -41,12 +41,32 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const currentTime = ref(0)
+let intervalId: number | null = null
+
 const progressPercent = computed(() => {
   return Math.min((props.attempts / props.maxAttempts) * 100, 100)
 })
 
 const estimatedTime = computed(() => {
   const remainingAttempts = props.maxAttempts - props.attempts
-  return Math.ceil(remainingAttempts * 3) // 3 seconds per attempt
+  const baseEstimate = Math.ceil(remainingAttempts * 3) // 3 seconds per attempt
+  
+  // Subtract elapsed time within current attempt
+  const elapsedInCurrentAttempt = currentTime.value % 3
+  return Math.max(0, baseEstimate - elapsedInCurrentAttempt)
+})
+
+onMounted(() => {
+  // Update every second
+  intervalId = setInterval(() => {
+    currentTime.value++
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
 })
 </script>
