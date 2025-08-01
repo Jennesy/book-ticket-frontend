@@ -10,13 +10,13 @@
         </v-icon>
         <div>
           <div class="font-medium">
-            售票系統狀態: 
+            售票系統狀態：
             <span :class="ticketingStatus.open ? 'text-green-600' : 'text-red-600'">
               {{ ticketingStatus.open ? '開放中' : '已關閉' }}
             </span>
           </div>
           <div v-if="ticketingStatus.updatedAt" class="text-sm text-gray-500">
-            最後更新: {{ formatDateTime(ticketingStatus.updatedAt) }}
+            最後更新：{{ formatDateTime(ticketingStatus.updatedAt) }}
           </div>
         </div>
       </div>
