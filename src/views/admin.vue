@@ -1,9 +1,12 @@
 <template>
   <div class="admin-page">
-    <h1>管理員後台</h1>
+    <h1 class="text-6 mb-2">管理員後台</h1>
+    
+    <!-- Ticketing Status Toggle -->
+    <TicketingStatusToggle class="mb-2" />
     
     <!-- Test CommonTabs -->
-    <div class="tabs-container">
+    <div>
       <Tabs
         v-model="activeTab"
         :tabs="tabItems"
@@ -30,6 +33,7 @@ import { ref } from 'vue'
 import Tabs from '@/components/common/tabs.vue'
 import SeatMap from '@/components/seat-map/index.vue'
 import OrderList from '@/components/admin/order-list.vue'
+import TicketingStatusToggle from '@/components/admin/ticketing-status-toggle.vue'
 
 const activeTab = ref('seatMap')
 
@@ -51,10 +55,6 @@ const tabItems = [
 .admin-page {
   padding: 20px;
   min-height: 100vh;
-}
-
-.tabs-container {
-  margin-top: 20px;
 }
 
 .tab-content {
