@@ -3,7 +3,7 @@
     <div v-if='selectedSeats.length'>
       <div>已選擇：</div>
       <div class='flex flex-wrap gap-1'>
-        <div v-for='seat in selectedSeats' :key='seat.text' :class='`${SEAT_PRICE_COLOR[seat.price][seat.status]} w-16 p-1`'>{{seat.text}}</div>
+        <div v-for='seat in selectedSeats' :key='seat.text' :class='`${SEAT_PRICE_COLOR[seat.price][SEAT_STATUS.AVAILABLE]} w-16 p-1`'>{{seat.text}}</div>
       </div>
     </div>
     <div v-if="mode === 'edit' && selectedSeats.length" class='flex flex-wrap items-center gap-2 mt-4'>
