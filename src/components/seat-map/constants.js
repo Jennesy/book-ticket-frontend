@@ -446,20 +446,20 @@ export const SECTIONS = {
   ],
   rightBackWing: [
     [
-      { row: 'P', col: 13 },
-      { row: 'P', col: 15 },
-      { row: 'P', col: 17 },
-      { row: 'P', col: 19 },
-      { row: 'P', col: 21 },
-      { row: 'P', col: null }
+      { row: 'L', col: 13 },
+      { row: 'L', col: 15 },
+      { row: 'L', col: 17 },
+      { row: 'L', col: 19 },
+      { row: 'L', col: 21 },
+      { row: 'L', col: null }
     ],
     [
-      { row: 'O', col: 13 },
-      { row: 'O', col: 15 },
-      { row: 'O', col: 17 },
-      { row: 'O', col: 19 },
-      { row: 'O', col: 21 },
-      { row: 'O', col: null }
+      { row: 'M', col: 13 },
+      { row: 'M', col: 15 },
+      { row: 'M', col: 17 },
+      { row: 'M', col: 19 },
+      { row: 'M', col: 21 },
+      { row: 'M', col: null }
     ],
     [
       { row: 'N', col: 13 },
