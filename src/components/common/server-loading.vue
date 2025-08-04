@@ -41,6 +41,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const startTime = ref(0)
 const currentTime = ref(0)
 let intervalId: number | null = null
 
@@ -49,18 +50,20 @@ const progressPercent = computed(() => {
 })
 
 const estimatedTime = computed(() => {
-  const remainingAttempts = props.maxAttempts - props.attempts
-  const baseEstimate = Math.ceil(remainingAttempts * 3) // 3 seconds per attempt
+  const totalEstimatedTime = props.maxAttempts * 3 // Total time in seconds
+  const elapsedTime = currentTime.value - startTime.value // Elapsed time since start
+  const remainingTime = Math.max(0, totalEstimatedTime - elapsedTime)
   
-  // Subtract elapsed time within current attempt
-  const elapsedInCurrentAttempt = currentTime.value % 3
-  return Math.max(0, baseEstimate - elapsedInCurrentAttempt)
+  return Math.ceil(remainingTime) // Return as integer seconds
 })
 
 onMounted(() => {
+  startTime.value = Date.now() / 1000 // Record start time in seconds
+  currentTime.value = startTime.value
+  
   // Update every second
   intervalId = setInterval(() => {
-    currentTime.value++
+    currentTime.value = Date.now() / 1000
   }, 1000)
 })
 
