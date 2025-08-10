@@ -19,14 +19,16 @@
 <script setup>
   import TransferInstructionsPanel from './transfer-instructions-panel.vue'
   import Dialog from '@/components/common/dialog.vue'
+  import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
   const emit = defineEmits(['close'])
+  const { copyToClipboard } = useCopyToClipboard()
 
   const onClose = () => {
     emit('close')
   }
 
   const onCopy = () => {
-    navigator.clipboard.writeText('SV2023')
+    copyToClipboard('SV2023', '折扣碼已複製到剪貼簿')
   }
 </script>

@@ -21,10 +21,10 @@
         <div class='flex flex-col mobile:text-lg'>
           <div class='mb-2'>完成匯款後，請在備註欄位寫上<span class='font-bold border-b-solid'>訂單號碼</span></div>
           <div class='px-6 py-2 bg-gray-100 rounded-lg'>
-            <div class='text-base'>銀行代碼：004</div>
-            <div class='text-base'>分行代碼：民生 0808</div>
-            <div class='text-base'>銀行帳號：080008007602</div>
-            <div class='text-base'>戶名：許敬雅</div>
+            <div class='text-base'>銀行代碼：永豐銀行 807</div>
+            <div class='text-base'>分行代碼：德惠分行 1583</div>
+            <div class='text-base'>銀行帳號：{{ accountNumber }} <v-icon size='16' class='cursor-pointer hover:bg-gray-200 rounded-full' @click='onCopy'>mdi-content-copy</v-icon></div>
+            <div class='text-base'>戶名：張雅筑</div>
           </div>
         </div>
       </div>
@@ -37,6 +37,13 @@
 <script setup>
   import Dialog from '@/components/common/dialog.vue'
   import { useWindowSize } from '@/composables/useWindowSize'
+  import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
   const { isMobile } = useWindowSize()
+  const { copyToClipboard } = useCopyToClipboard()
+  const accountNumber = '08801800387632'
+
+  const onCopy = () => {
+    copyToClipboard(accountNumber, '帳號已複製到剪貼簿')
+  }
 </script>
