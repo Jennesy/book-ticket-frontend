@@ -101,22 +101,20 @@
         <div class='bg-gray-50 rounded-lg p-3'>
           <div class='flex items-center justify-between'>
             <div class='flex items-center gap-3'>
-              <Button
-                prepend-icon="mdi-minus"
-                size="x-small"
-                color='red'
-                variant="outlined"
-                :disabled="programBookCount <= 0"
-                @click="onProgramBookChange(programBookCount - 1)"
-              />
+              <div
+                class='w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-red-50 rounded-full border border-red-200 transition-colors'
+                :class="{ 'opacity-30 cursor-not-allowed': programBookCount <= 0 }"
+                @click="programBookCount > 0 && onProgramBookChange(programBookCount - 1)"
+              >
+                <v-icon size="18">mdi-minus</v-icon>
+              </div>
               <span class='w-8 text-center font-medium'>{{ programBookCount }}</span>
-              <Button
-                prepend-icon="mdi-plus"
-                size="x-small"
-                color='primary'
-                variant="outlined"
+              <div
+                class='w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-blue-50 rounded-full border border-blue-200 transition-colors'
                 @click="onProgramBookChange(programBookCount + 1)"
-              />
+              >
+                <v-icon size="18">mdi-plus</v-icon>
+              </div>
             </div>
             <div v-if="programBookCount && orderSummary" class='text-right'>
               <div class='flex items-center gap-2'>
