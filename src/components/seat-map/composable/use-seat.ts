@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
+import { discountConfig, type OrderSummary, type PriceBreakdown } from '@/config/discount'
 
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>
 
@@ -10,6 +11,7 @@ export function useSeat() {
   const seats = ref<Seat[]>([])
   const selected = ref<Set<string>>(new Set())
   const programBookCount = ref(0)
+  const isMember = ref(true)
 
   async function fetchSeats() {
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
@@ -38,6 +40,7 @@ export function useSeat() {
   async function reserve(data: { userName: string , date: Date, account: string }) {
     const payload = {
       ...data,
+      isMember: isMember.value,
       totalPrice: grandTotal.value,
       seatLabels: selectedSeats.value.map(s => `${s.row}${s.col}`),
       programBookCount: programBookCount.value,
@@ -74,11 +77,121 @@ export function useSeat() {
   const selectedSeats = computed<Seat[]>(() => {
     return seats.value.filter(seat => selected.value.has(`${seat.row}${seat.col}`))
   })
-  const seatsTotal = computed(() =>
-    selectedSeats.value.reduce((sum, s) => sum + (s.price || 0), 0)
-  )
-  const booksTotal = computed(() => programBookCount.value * 200)
-  const grandTotal = computed(() => seatsTotal.value + booksTotal.value)
+
+  // 計算座位折扣
+  function calculateSeatDiscount(price: number, quantity: number): PriceBreakdown {
+    let finalPrice = price
+    let discountType: 'member' | 'group' | 'both' | undefined
+    let discountRate = 1
+
+    // 團員折扣
+    const memberDiscountApplies = isMember.value && 
+      discountConfig.memberDiscount.eligiblePrices.includes(price)
+    
+    if (memberDiscountApplies) {
+      finalPrice = price * discountConfig.memberDiscount.discountRate
+      discountType = 'member'
+      discountRate = discountConfig.memberDiscount.discountRate
+    }
+
+    // 團購折扣
+    const groupDiscount = discountConfig.groupDiscount[price]
+    if (groupDiscount && quantity >= groupDiscount.minQuantity) {
+      const groupDiscountPrice = price * groupDiscount.discountRate
+      
+      if (!memberDiscountApplies || groupDiscountPrice < finalPrice) {
+        finalPrice = groupDiscountPrice
+        discountType = memberDiscountApplies ? 'both' : 'group'
+        discountRate = groupDiscount.discountRate
+      }
+    }
+
+    return {
+      originalPrice: price,
+      discountedPrice: finalPrice,
+      discountType,
+      discountRate,
+      savings: price - finalPrice
+    }
+  }
+
+  // 計算節目冊折扣
+  function calculateProgramBookDiscount(): PriceBreakdown {
+    const originalPrice = discountConfig.programBook.originalPrice
+    const finalPrice = isMember.value 
+      ? discountConfig.programBook.memberPrice 
+      : originalPrice
+    
+    return {
+      originalPrice,
+      discountedPrice: finalPrice,
+      discountType: isMember.value ? 'member' : undefined,
+      discountRate: isMember.value ? (finalPrice / originalPrice) : 1,
+      savings: originalPrice - finalPrice
+    }
+  }
+
+  // 訂單詳細計算
+  const orderSummary = computed<OrderSummary>(() => {
+    // 按價格分組座位
+    const seatsByPrice = selectedSeats.value.reduce((acc, seat) => {
+      const price = seat.price || 0
+      if (!acc[price]) {
+        acc[price] = []
+      }
+      acc[price].push(seat)
+      return acc
+    }, {} as Record<number, Seat[]>)
+
+    // 計算每個價格組的折扣
+    const seatsBreakdown: OrderSummary['seats'] = {}
+    Object.entries(seatsByPrice).forEach(([priceStr, seatList]) => {
+      const price = Number(priceStr)
+      const quantity = seatList.length
+      const breakdown = calculateSeatDiscount(price, quantity)
+      
+      seatsBreakdown[price] = {
+        quantity,
+        originalPrice: price * quantity,
+        finalPrice: breakdown.discountedPrice * quantity,
+        breakdown,
+        seatNumbers: seatList.map(s => `${s.row}${s.col}`)
+      }
+    })
+
+    // 計算節目冊
+    const programBookBreakdown = calculateProgramBookDiscount()
+    const programBooks = {
+      quantity: programBookCount.value,
+      originalPrice: programBookBreakdown.originalPrice * programBookCount.value,
+      finalPrice: programBookBreakdown.discountedPrice * programBookCount.value,
+      breakdown: programBookBreakdown
+    }
+
+    // 計算總計
+    const seatsOriginalTotal = Object.values(seatsBreakdown)
+      .reduce((sum, item) => sum + item.originalPrice, 0)
+    const seatsFinalTotal = Object.values(seatsBreakdown)
+      .reduce((sum, item) => sum + item.finalPrice, 0)
+    
+    const originalTotal = seatsOriginalTotal + programBooks.originalPrice
+    const finalTotal = seatsFinalTotal + programBooks.finalPrice
+
+    return {
+      seats: seatsBreakdown,
+      programBooks,
+      totals: {
+        originalTotal,
+        finalTotal,
+        totalSavings: originalTotal - finalTotal
+      }
+    }
+  })
+
+  // 保持舊的 computed 屬性以兼容現有代碼
+  const seatsTotal = computed(() => orderSummary.value.totals.finalTotal - orderSummary.value.programBooks.finalPrice)
+  const booksTotal = computed(() => orderSummary.value.programBooks.finalPrice)
+  const grandTotal = computed(() => orderSummary.value.totals.finalTotal)
 
   const reset = () => {
     selected.value.clear()
@@ -141,6 +254,11 @@ export function useSeat() {
       get: () => programBookCount.value,
       set: v => (programBookCount.value = v),
     }),
+    isMember: computed({
+      get: () => isMember.value,
+      set: v => (isMember.value = v),
+    }),
+    orderSummary,
     seatsTotal,
     booksTotal,
     grandTotal,

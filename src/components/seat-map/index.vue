@@ -5,6 +5,8 @@
     :selected-seats='formattedSelectedSeats' 
     :grandTotal='grandTotal' 
     :mode='mode'
+    :orderSummary='orderSummary'
+    :isMember='isMember'
     v-model:editPropertyName='editPropertyName'
     v-model:editNewValue='editNewValue'
     v-model:programBookCount='programBookCount'
@@ -13,7 +15,8 @@
   <div class="overflow-scroll bg-gray-700 m-2 mb-50">
     <div class="p-8 w-fit">
       <div class="grid scale-80 mobile:scale-100" :class="$style.seats">
-        <div :class='$style.legend' class='rounded-xl'>
+        <div :class='$style.legend' class='rounded-xl relative'>
+          <div class='text-sm text-gray-400 absolute -bottom-5 right-4'>*折扣前價格</div>
           <div v-for='tag in Object.keys(legend)' :key='tag' class='flex items-center gap-2'>
             <div :class='`${legend[tag]} aspect-square rounded-full w-3`'></div>
             <div class='text-white'>{{ tag }}</div>
@@ -42,7 +45,7 @@
     </div>
   </div>
 
-  <SubmitPanel v-if="isSubmitPanelVisible" :seats='formattedSelectedSeats' :total='grandTotal' @submit="onReserve" @close="onSubmitPanelClose" />
+  <SubmitPanel v-if="isSubmitPanelVisible" :seats='formattedSelectedSeats' :total='grandTotal' :programBookCount='programBookCount' :orderSummary='orderSummary' @submit="onReserve" @close="onSubmitPanelClose" />
   <SuccessPanel v-if="isSuccessPanelVisible" @close="onSuccessPanelClose" />
 </template>
 
@@ -86,6 +89,8 @@ export default defineComponent({
       seatsTotal,
       booksTotal,
       grandTotal,
+      orderSummary,
+      isMember,
       reserve,
       toggleSeat,
       reset,
@@ -231,6 +236,8 @@ export default defineComponent({
       seatsTotal,
       booksTotal,
       grandTotal,
+      orderSummary,
+      isMember,
       onSubmit,
       onSubmitPanelClose,
       onSuccessPanelClose,

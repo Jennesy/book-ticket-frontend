@@ -9,11 +9,11 @@
         <slot name="title" />
       </v-card-title>
       <v-icon :class='$style.icon' size='16' color='black' @click.stop='onClose'>mdi-close</v-icon>
-      <v-card-text>
+      <v-card-text class='overflow-y-auto'>
         <slot />
       </v-card-text>
       <template v-if='$slots["footer-action"]'>
-        <v-card-actions>
+        <v-card-actions class='border-t'>
           <slot name='footer-action'></slot>
         </v-card-actions>
       </template>
