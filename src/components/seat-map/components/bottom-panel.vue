@@ -83,8 +83,8 @@
             <span v-if="selectedSeats.length > 3" class='text-xs text-gray-500'>...</span>
           </div>
         </div>
-        <div v-if='programBookCount > 0' class='text-sm text-gray-600'>
-          節目冊 {{ programBookCount }}
+        <div v-if="programBookCount > 0 || (orderSummary?.seats?.['1200'])" class='text-sm text-gray-600'>
+          節目冊 {{ programBookCount + (orderSummary?.seats?.['1200']?.quantity || 0) }}
         </div>
       </div>
       <div class='flex items-center gap-2'>
@@ -114,6 +114,10 @@
                 @click="onProgramBookChange(programBookCount + 1)"
               >
                 <v-icon size="18">mdi-plus</v-icon>
+              </div>
+              <div v-if="orderSummary?.seats?.['1200']" class="flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs rounded-md border border-green-200">
+                <v-icon size="14" class="mr-1">mdi-gift</v-icon>
+                送 {{ orderSummary.seats[1200].quantity }} 本
               </div>
             </div>
             <div v-if="programBookCount && orderSummary" class='text-right'>

@@ -58,7 +58,7 @@
           </div>
         </div>
 
-        <!-- Program Books -->
+        <!-- Program Books - Purchased -->
         <div v-if='programBookCount > 0' class='mb-3'>
           <div class='flex items-center justify-between'>
             <div>
@@ -76,6 +76,20 @@
                    class='text-xs text-green-600'>
                 團員價
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Program Books - Free Gift -->
+        <div v-if="orderSummary?.seats?.['1200']" class='mb-3'>
+          <div class='flex items-center justify-between'>
+            <div>
+              <div class='text-sm flex items-center gap-2'>
+                贈送節目冊 × {{ orderSummary.seats[1200].quantity }}
+              </div>
+            </div>
+            <div class='text-right'>
+              <div class='font-medium text-green-600'>免費</div>
             </div>
           </div>
         </div>
