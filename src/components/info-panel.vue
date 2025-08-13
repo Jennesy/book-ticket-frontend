@@ -10,7 +10,7 @@
         <div>9/1 (五) 12:00 OPENTIX 開放線上購票 <a href='https://bit.ly/3KOuqT4
   '>購票連結</a></div>
         <div>(開放後才會顯示網頁內容)</div>
-        <div>團內親友 輸入折扣碼 <span class='font-bold bg-gray-200 px-2 py-1 rounded-md'>SV2023</span> <v-icon size='16' class='cursor-pointer hover:bg-gray-200 rounded-full' @click='onCopy'>mdi-content-copy</v-icon></div>
+        <div>團內親友 輸入折扣碼 <span class='font-bold bg-gray-200 px-2 py-1 rounded-md'>SV2025</span> <v-icon size='16' class='cursor-pointer hover:bg-gray-200 rounded-full' @click='onCopy'>mdi-content-copy</v-icon></div>
       </div>
     </template>
   </TransferInstructionsPanel>
