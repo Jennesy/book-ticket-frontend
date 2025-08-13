@@ -94,9 +94,16 @@ export function useSeat() {
       discountRate = discountConfig.memberDiscount.discountRate
     }
 
-    // 團購折扣
+    // 團購折扣 (有期限限制)
+    const isGroupDiscountActive = () => {
+      const now = new Date()
+      const taipeiTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }))
+      const deadline = new Date(discountConfig.groupDiscount.deadline)
+      return taipeiTime <= deadline
+    }
+
     const groupDiscount = discountConfig.groupDiscount[price]
-    if (groupDiscount && quantity >= groupDiscount.minQuantity) {
+    if (groupDiscount && quantity >= groupDiscount.minQuantity && isGroupDiscountActive()) {
       const groupDiscountPrice = price * groupDiscount.discountRate
       
       if (!memberDiscountApplies || groupDiscountPrice < finalPrice) {
