@@ -76,7 +76,7 @@
         <div v-if='selectedSeats.length' class='flex items-center gap-2'>
           <span class='text-sm font-medium'>已選 {{ selectedSeats.length }} 座位</span>
           <div class='flex gap-1'>
-            <span v-for="seat in selectedSeats.slice(0, 5)" :key="seat.text" 
+            <span v-for="seat in selectedSeats.slice(0, 4)" :key="seat.text" 
                   class='px-1 py-0.5 bg-blue-100 text-blue-800 text-xs rounded'>
               {{ seat.text }}
             </span>
