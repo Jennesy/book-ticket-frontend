@@ -14,7 +14,7 @@
       </div>
 
       <div class='flex flex-wrap items-center gap-2 mt-4'>
-        <div class='w-25 flex items-center gap-4'>
+        <div class='w-full mobile:w-[49%] tablet:w-[25%] flex items-center gap-4'>
           <Select 
             :model-value="editPropertyName"
             @update:model-value="onEditPropertyChange"
@@ -28,7 +28,7 @@
           />
         </div>
         
-        <div class='w-25 flex items-center gap-4'>
+        <div class='w-full mobile:w-[49%] tablet:w-[25%] flex items-center gap-4'>
           <Select 
             v-if="editPropertyName === 'status'"
             :model-value="editNewValue"
