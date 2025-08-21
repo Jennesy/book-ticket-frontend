@@ -153,7 +153,7 @@
 </template>
 
 <script lang="ts">
-import { ref, PropType, computed } from 'vue'
+import { ref, PropType, computed, watch, watchEffect } from 'vue'
 import Dialog from '@/components/common/dialog.vue'
 import Button from '@/components/common/button.vue'
 import DatePicker from '@/components/common/date-picker.vue'
@@ -266,6 +266,11 @@ export default {
     const onDateUpdate = (value: Date) => {
       date.value = value
     }
+
+    watch(() => props.seats.length, () => {
+      console.log('seats length changed', props.seats.length)
+      emit('close')
+    })
 
     return {
       isMobile,

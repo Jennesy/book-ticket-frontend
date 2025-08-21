@@ -4,6 +4,8 @@ import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { discountConfig, type OrderSummary, type PriceBreakdown } from '@/config/discount'
+import { useNotification } from '@/composables/useNotification'
+import { SEAT_STATUS } from '@/components/seat-map/constants'
 
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>
 
@@ -12,18 +14,44 @@ export function useSeat() {
   const selected = ref<Set<string>>(new Set())
   const programBookCount = ref(0)
   const isMember = ref(true)
+  const { showNotification } = useNotification()
 
   async function fetchSeats() {
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
     seats.value = await res.json()
   }
 
+  const handleSeatUpdated = (newSeats: Seat[]) => {
+    const conflictedSeats: string[] = []
+      
+    selected.value.forEach(seatId => {
+      const newSeat = newSeats.find((seat: Seat) => `${seat.row}${seat.col}` === seatId)
+      if (newSeat && newSeat.status === SEAT_STATUS.BOOKED) {
+        conflictedSeats.push(seatId)
+      }
+    })
+    
+    // Remove conflicted seats from selection
+    if (conflictedSeats.length > 0) {
+      conflictedSeats.forEach(seatId => {
+        selected.value.delete(seatId)
+      })
+      
+      // Show notification
+      const message = conflictedSeats.length === 1 
+        ? `座位 ${conflictedSeats[0]} 已被其他人選擇，已自動取消選擇`
+        : `座位 ${conflictedSeats.join(', ')} 已被其他人選擇，已自動取消選擇`
+      
+      showNotification(message, 'warning', 'long')
+    }
+    
+    seats.value = newSeats
+  }
+
   function initSocket() {
     if (socket) return
     socket = io(import.meta.env.VITE_API_BASE_URL)
-    socket.on('seatUpdated', (newSeats) => {
-      seats.value = newSeats
-    })
+    socket.on('seatUpdated', handleSeatUpdated)
   }
 
   onMounted(() => {
