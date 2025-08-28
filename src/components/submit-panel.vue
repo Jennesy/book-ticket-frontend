@@ -268,7 +268,6 @@ export default {
     }
 
     watch(() => props.seats.length, () => {
-      console.log('seats length changed', props.seats.length)
       emit('close')
     })
 
