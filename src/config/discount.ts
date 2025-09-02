@@ -34,8 +34,7 @@ export const discountConfig: DiscountConfig = {
     deadline: '2025-09-24T23:59:59+08:00', // 團購優惠截止時間 (台灣時間)
     1200: { minQuantity: 4, discountRate: 0.9 }, // 滿4張9折
     1000: { minQuantity: 6, discountRate: 0.8 }, // 滿6張8折
-    800: { minQuantity: 8, discountRate: 0.8 },  // 滿8張8折
-    400: { minQuantity: 4, discountRate: 0.9 }   // 滿4張9折
+    800: { minQuantity: 8, discountRate: 0.8 }  // 滿8張8折
   }
 }
 
