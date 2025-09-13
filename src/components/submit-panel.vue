@@ -38,7 +38,7 @@
                 <div class='text-sm'>座位 {{ item.seatNumbers.join(', ') }}</div>
                 <div class='text-gray-500 text-xs'>NT${{ price }} × {{ item.quantity }}</div>
               </div>
-              <div class='text-right'>
+              <div class='text-right flex-shrink-0'>
                 <div v-if="item.breakdown.savings > 0" class='flex items-center gap-2'>
                   <span class='text-gray-400 line-through text-sm'>NT${{ item.originalPrice }}</span>
                   <span class='font-medium'>NT${{ item.finalPrice }}</span>
