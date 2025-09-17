@@ -14,7 +14,7 @@
                 <v-icon size='18'>mdi-calendar-clock</v-icon>
                 <span class='font-semibold text-gray-800'>開放時間</span>
               </div>
-              <div class='mobile:text-lg font-medium text-gray-700'>9/13 (六) 12:00 OPENTIX 開放線上購票</div>
+              <div class='mobile:text-lg font-medium text-gray-700'>9/20 (六) 12:00 OPENTIX 開放線上購票</div>
               <div class='text-sm text-gray-500 mt-1'>(開放後才會顯示網頁內容)</div>
             </div>
             <div class='bg-white rounded-lg p-4 border border-indigo-100'>
