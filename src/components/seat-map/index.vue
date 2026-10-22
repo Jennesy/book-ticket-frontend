@@ -58,6 +58,7 @@ import SubmitPanel from '@/components/submit-panel.vue'
 import SuccessPanel from '@/components/success-panel.vue'
 import BottomPanel from './components/bottom-panel.vue'
 import SeatItem from './components/seat-item.vue'
+import { useNotification } from '@/composables/useNotification'
 
 export default defineComponent({
   name: 'SeatMap',
@@ -95,7 +96,8 @@ export default defineComponent({
       toggleSeat,
       reset,
       editSelectedSeats,
-    } = useSeat()
+    } = useSeat({ isAdmin: props.mode === 'edit' })
+    const { showNotification } = useNotification()
 
     const selectedSeatLabels = computed(() => selectedSeats.value.map(s => `${s.row}${s.col}`))
 
@@ -191,6 +193,11 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('編輯失敗:', error)
+        // 401/403 are already reported by adminFetch
+        const status = (error as { status?: number }).status
+        if (status === 401 || status === 403) return
+        const errorMessage = error instanceof Error ? error.message : '編輯失敗，請稍後再試'
+        showNotification(`編輯失敗：${errorMessage}`, 'error', 'long')
       } finally {
         reset()
         editPropertyName.value = 'status'

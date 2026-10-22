@@ -147,6 +147,8 @@ import { ref, onMounted } from 'vue'
 import Button from '@/components/common/button.vue'
 import DataTable from '@/components/common/data-table.vue'
 import Dialog from '@/components/common/dialog.vue'
+import { useAdminAuth } from '@/composables/useAdminAuth'
+import { useNotification } from '@/composables/useNotification'
 
 interface Seat {
   _id: string
@@ -167,6 +169,8 @@ interface Reservation {
   originalReservationId?: string
 }
 const orderListUrl = import.meta.env.VITE_ORDER_LIST_URL
+const { adminFetch } = useAdminAuth()
+const { showNotification } = useNotification()
 
 const loading = ref(false)
 const orders = ref<Reservation[]>([])
@@ -195,7 +199,7 @@ const headers = [
 const fetchOrders = async () => {
   loading.value = true
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reserve`)
+    const response = await adminFetch('/api/reserve')
     if (response.ok) {
       orders.value = await response.json()
     }
@@ -218,15 +222,17 @@ const viewOrder = (order: Reservation) => {
 const deleteOrder = async (order: Reservation) => {
   if (confirm(`確定要刪除 ${order.userName} 的訂單嗎？`)) {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/reserve/${order._id}`,
-        { method: 'DELETE' }
-      )
+      const response = await adminFetch(`/api/reserve/${order._id}`, { method: 'DELETE' })
       if (response.ok) {
         await fetchOrders()
+      } else if (response.status !== 401 && response.status !== 403) {
+        // 401/403 are already reported by adminFetch
+        const errorData = await response.json().catch(() => ({}))
+        showNotification(`刪除失敗：${errorData.message || `HTTP ${response.status}`}`, 'error', 'long')
       }
     } catch (error) {
       console.error('Failed to delete order:', error)
+      showNotification('刪除失敗，請稍後再試', 'error', 'long')
     }
   }
 }

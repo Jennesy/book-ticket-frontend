@@ -5,19 +5,24 @@ import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { discountConfig, type OrderSummary, type PriceBreakdown } from '@/config/discount'
 import { useNotification } from '@/composables/useNotification'
+import { useAdminAuth } from '@/composables/useAdminAuth'
 import { SEAT_STATUS } from '@/components/seat-map/constants'
 
 let socket: Socket<DefaultEventsMap, DefaultEventsMap>
 
-export function useSeat() {
+export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   const seats = ref<Seat[]>([])
   const selected = ref<Set<string>>(new Set())
   const programBookCount = ref(0)
   const isMember = ref(true)
   const { showNotification } = useNotification()
+  const { adminFetch } = useAdminAuth()
 
   async function fetchSeats() {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
+    const res = isAdmin
+      ? await adminFetch('/api/seats')
+      : await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
+    if (!res.ok) return
     seats.value = await res.json()
   }
 
@@ -258,15 +263,21 @@ export function useSeat() {
     const payload = { seats: seatsToUpdate }
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`, {
+      const res = await adminFetch('/api/seats', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       
-      const result = await res.json()
-      
-      if (res.ok && result.updatedSeats?.length > 0) {
+      const result = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        const error = new Error(result.message || `HTTP ${res.status}`) as Error & { status?: number }
+        error.status = res.status
+        throw error
+      }
+
+      if (result.updatedSeats?.length > 0) {
         result.updatedSeats.forEach(updatedSeat => {
           const seatIndex = seats.value.findIndex(s => s._id === updatedSeat._id)
           if (seatIndex !== -1) {

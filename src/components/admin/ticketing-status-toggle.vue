@@ -46,6 +46,8 @@ const toggleTicketingStatus = async () => {
     const newStatus = !ticketingStatus.value.open
     await updateTicketingStatus(newStatus)
   } catch (error) {
+    // 401 is already reported by adminFetch
+    if ((error as { status?: number }).status === 401) return
     alert('更新售票狀態失敗，請稍後再試')
   }
 }
