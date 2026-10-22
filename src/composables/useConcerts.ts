@@ -69,7 +69,8 @@ export function useConcertApi() {
 export function useConcerts() {
   const concerts = ref<Concert[]>([])
   const activeTag = ref<string | null>(null)
-  const loading = ref(false)
+  // Starts true: the list is fetched as soon as the component mounts
+  const loading = ref(true)
   const { getConcerts } = useConcertApi()
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 

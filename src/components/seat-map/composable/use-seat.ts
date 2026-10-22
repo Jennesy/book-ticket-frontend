@@ -1,5 +1,5 @@
 // src/composables/useSeat.js
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
@@ -8,7 +8,13 @@ import { useNotification } from '@/composables/useNotification'
 import { useAdminAuth } from '@/composables/useAdminAuth'
 import { SEAT_STATUS } from '@/components/seat-map/constants'
 
-export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
+interface UseSeatOptions {
+  isAdmin?: boolean
+  // Getter for an archived concert's tag; when set, seats are read-only snapshots of that concert
+  tag?: () => string | undefined
+}
+
+export function useSeat({ isAdmin = false, tag }: UseSeatOptions = {}) {
   const seats = ref<Seat[]>([])
   const selected = ref<Set<string>>(new Set())
   const programBookCount = ref(0)
@@ -18,9 +24,13 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
   async function fetchSeats() {
+    const concertTag = tag?.()
+    if (tag && !concertTag) return
+
+    const path = concertTag ? `/api/seats?tag=${encodeURIComponent(concertTag)}` : '/api/seats'
     const res = isAdmin
-      ? await adminFetch('/api/seats')
-      : await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
+      ? await adminFetch(path)
+      : await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`)
     if (!res.ok) return
     seats.value = await res.json()
   }
@@ -70,8 +80,13 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
 
   onMounted(() => {
     fetchSeats()
-    initSocket()
+    // seatUpdated only carries the current concert, so it must not reach a tag view
+    if (!tag) initSocket()
   })
+
+  if (tag) {
+    watch(tag, fetchSeats)
+  }
 
   onUnmounted(() => {
     if (socket) {
