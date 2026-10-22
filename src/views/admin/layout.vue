@@ -63,6 +63,7 @@ const pageTitle = computed(() => route.meta.title as string | undefined)
 
 const navItems = [
   { title: '當前場次', to: '/admin', icon: 'mdi-ticket-outline' },
+  { title: '場次管理', to: '/admin/concerts', icon: 'mdi-playlist-edit' },
 ]
 
 // Close the menu once a page is picked
