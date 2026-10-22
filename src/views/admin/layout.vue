@@ -32,7 +32,7 @@
           :title="item.title"
           :prepend-icon="item.icon"
           color="primary"
-          exact
+          :exact="item.to === '/admin'"
         />
       </v-list>
 
@@ -61,6 +61,7 @@ const isMenuOpen = ref(false)
 
 const pageTitle = computed(() => route.meta.title as string | undefined)
 
+// Only 當前場次 matches exactly, so 場次管理 stays highlighted on /admin/concerts/:tag
 const navItems = [
   { title: '當前場次', to: '/admin', icon: 'mdi-ticket-outline' },
   { title: '場次管理', to: '/admin/concerts', icon: 'mdi-playlist-edit' },
