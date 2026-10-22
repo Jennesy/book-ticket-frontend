@@ -6,6 +6,7 @@ import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { discountConfig, type OrderSummary, type PriceBreakdown } from '@/config/discount'
 import { useNotification } from '@/composables/useNotification'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import { useActiveConcert } from '@/composables/useActiveConcert'
 import { SEAT_STATUS } from '@/components/seat-map/constants'
 
 interface UseSeatOptions {
@@ -21,6 +22,7 @@ export function useSeat({ isAdmin = false, tag }: UseSeatOptions = {}) {
   const isMember = ref(true)
   const { showNotification } = useNotification()
   const { adminFetch } = useAdminAuth()
+  const { activeConcert } = useActiveConcert()
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
   async function fetchSeats() {
@@ -161,12 +163,10 @@ export function useSeat({ isAdmin = false, tag }: UseSeatOptions = {}) {
       discountRate = discountConfig.memberDiscount.discountRate
     }
 
-    // 團購折扣 (有期限限制)
+    // 團購折扣 (有期限限制，未設定截止時間則不提供；截止那一刻仍算優惠)
     const isGroupDiscountActive = () => {
-      const now = new Date()
-      const taipeiTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }))
-      const deadline = new Date(discountConfig.groupDiscount.deadline)
-      return taipeiTime <= deadline
+      const deadline = activeConcert.value?.groupDiscountDeadline
+      return !!deadline && Date.now() <= new Date(deadline).getTime()
     }
 
     const groupDiscount = discountConfig.groupDiscount[price]

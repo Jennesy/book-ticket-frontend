@@ -4,7 +4,7 @@
     <div v-if="!readonly" class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
       <span class="text-sm text-gray-500 flex items-center flex-wrap gap-1">
         <v-icon>mdi-alert-circle</v-icon>
-        如果刪除訂單，請手動到<a :href='orderListUrl' target='_blank'>訂單列表</a>備註更新狀態
+        如果刪除訂單，請手動到<a v-if='orderListUrl' :href='orderListUrl' target='_blank'>訂單列表</a><span v-else>訂單列表</span>備註更新狀態
       </span>
       <Button
         class="shrink-0"
@@ -144,13 +144,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import Button from '@/components/common/button.vue'
 import DataTable from '@/components/common/data-table.vue'
 import Dialog from '@/components/common/dialog.vue'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import { useActiveConcert } from '@/composables/useActiveConcert'
 import { useNotification } from '@/composables/useNotification'
 
 interface Seat {
@@ -177,7 +178,9 @@ const props = defineProps<{
   readonly?: boolean
 }>()
 
-const orderListUrl = import.meta.env.VITE_ORDER_LIST_URL
+// Only shown outside readonly, i.e. for the current concert
+const { activeConcert } = useActiveConcert()
+const orderListUrl = computed(() => activeConcert.value?.orderListUrl)
 const { adminFetch } = useAdminAuth()
 const { showNotification } = useNotification()
 let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null

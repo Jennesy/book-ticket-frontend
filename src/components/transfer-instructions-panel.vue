@@ -7,7 +7,7 @@
       <div class='flex gap-2 items-start'>
         <div class='w-7 mobile:w-8 aspect-square bg-emerald-900 text-white rounded-full flex items-center justify-center text-lg mobile:text-xl font-bold flex-shrink-0 '> 1 </div>
         <div class='mobile:text-lg'>到
-          <a :href='orderListUrl' target='_blank'>
+          <a :href='orderListUrl ?? undefined' target='_blank'>
             <div class="mx-2 inline-flex items-center translate-y-0.5 px-4 py-1 bg-emerald-700 rounded-lg hover:bg-emerald-800 saturate-50 text-white">
               <v-icon size='18' class='mr-1'>mdi-open-in-new</v-icon>
               <div>訂單列表</div>
@@ -24,25 +24,25 @@
           <div class='border border-gray-200 rounded-xl px-6 py-4 bg-orange-50 shadow-sm'>
             <div class='space-y-2'>
               <div class='flex justify-between items-center py-2 border-b border-gray-100'>
-                <span class='text-gray-600 font-medium'>銀行代碼</span>
-                <span class='font-mono font-semibold text-gray-800'>{{ transferAccount.bank }}</span>
+                <span class='text-gray-600 font-medium'>銀行</span>
+                <span class='font-semibold text-gray-800'>{{ transferAccount.bank || '—' }}</span>
               </div>
               <div class='flex justify-between items-center py-2 border-b border-gray-100'>
-                <span class='text-gray-600 font-medium'>分行代碼</span>
-                <span class='font-mono font-semibold text-gray-800'>{{ transferAccount.branch }}</span>
+                <span class='text-gray-600 font-medium'>分行</span>
+                <span class='font-semibold text-gray-800'>{{ transferAccount.branch || '—' }}</span>
               </div>
               <div class='flex justify-between items-center py-2 border-b border-gray-100'>
                 <span class='text-gray-600 font-medium'>銀行帳號</span>
                 <div class='flex items-center gap-2'>
-                  <span class='font-mono font-semibold text-gray-800 bg-gray-100 px-3 py-1 rounded-lg'>{{ transferAccount.accountNumber }}</span>
-                  <button @click='onCopy' class='p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'>
+                  <span class='font-mono font-semibold text-gray-800 bg-gray-100 px-3 py-1 rounded-lg'>{{ transferAccount.accountNumber ?? '—' }}</span>
+                  <button v-if='transferAccount.accountNumber' @click='onCopy' class='p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'>
                     <v-icon size='18'>mdi-content-copy</v-icon>
                   </button>
                 </div>
               </div>
               <div class='flex justify-between items-center py-2'>
                 <span class='text-gray-600 font-medium'>戶名</span>
-                <span class='font-semibold text-gray-800'>{{ transferAccount.accountName }}</span>
+                <span class='font-semibold text-gray-800'>{{ transferAccount.accountName ?? '—' }}</span>
               </div>
             </div>
           </div>
@@ -55,21 +55,26 @@
 </template>
 
 <script setup>
+  import { computed } from 'vue'
   import Dialog from '@/components/common/dialog.vue'
   import { useWindowSize } from '@/composables/useWindowSize'
   import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
+  import { useActiveConcert } from '@/composables/useActiveConcert'
 
   const { isMobile } = useWindowSize()
   const { copyToClipboard } = useCopyToClipboard()
-  const orderListUrl = import.meta.env.VITE_ORDER_LIST_URL
-  const transferAccount = {
-    bank: import.meta.env.VITE_TRANSFER_BANK_NAME,
-    branch: import.meta.env.VITE_TRANSFER_BANK_BRANCH,
-    accountNumber: import.meta.env.VITE_TRANSFER_BANK_ACCOUNT_NUMBER,
-    accountName: import.meta.env.VITE_TRANSFER_BANK_ACCOUNT_OWNER
-  }
+  const { activeConcert } = useActiveConcert()
+  const orderListUrl = computed(() => activeConcert.value?.orderListUrl)
+  // e.g. 永豐銀行 807; either part may be unset
+  const joinNameAndCode = (name, code) => [name, code].filter(Boolean).join(' ')
+  const transferAccount = computed(() => ({
+    bank: joinNameAndCode(activeConcert.value?.transferBankName, activeConcert.value?.transferBankCode),
+    branch: joinNameAndCode(activeConcert.value?.transferBranchName, activeConcert.value?.transferBranchCode),
+    accountNumber: activeConcert.value?.transferAccountNumber,
+    accountName: activeConcert.value?.transferAccountName
+  }))
 
   const onCopy = () => {
-    copyToClipboard(transferAccount.accountNumber, '帳號已複製到剪貼簿')
+    copyToClipboard(transferAccount.value.accountNumber, '帳號已複製到剪貼簿')
   }
 </script>

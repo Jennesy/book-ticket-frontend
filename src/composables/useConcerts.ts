@@ -3,7 +3,23 @@ import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { useAdminAuth } from '@/composables/useAdminAuth'
 
-export interface Concert {
+// Per-concert info shown to buyers; every field is null until set.
+// Date-times come back as UTC ISO strings
+export interface ConcertInfo {
+  opentixUrl: string | null
+  opentixOpenAt: string | null
+  discountCode: string | null
+  groupDiscountDeadline: string | null
+  orderListUrl: string | null
+  transferBankName: string | null
+  transferBankCode: string | null
+  transferBranchName: string | null
+  transferBranchCode: string | null
+  transferAccountNumber: string | null
+  transferAccountName: string | null
+}
+
+export interface Concert extends ConcertInfo {
   tag: string
   name?: string
   hasSheetWebhook: boolean
@@ -17,7 +33,8 @@ export interface CreateConcertBody {
   sheetWebhook?: string
 }
 
-export interface UpdateConcertBody {
+// null clears a field; empty strings are rejected by the API
+export interface UpdateConcertBody extends Partial<ConcertInfo> {
   name?: string
   sheetWebhook?: string | null
 }
@@ -41,6 +58,9 @@ export function useConcertApi() {
     return result
   }
 
+  const getConcert = (tag: string) =>
+    request<{ concert: Concert }>(`/api/concerts/${encodeURIComponent(tag)}`)
+
   const getConcerts = () =>
     request<{ activeTag: string, concerts: Concert[] }>('/api/concerts')
 
@@ -59,13 +79,14 @@ export function useConcertApi() {
     })
 
   return {
+    getConcert,
     getConcerts,
     createConcert,
     updateConcert
   }
 }
 
-// Concert list (newest first) kept in sync through the concertChanged event
+// Concert list (newest first) kept in sync through the concertChanged and concertUpdated events
 export function useConcerts() {
   const concerts = ref<Concert[]>([])
   const activeTag = ref<string | null>(null)
@@ -92,6 +113,7 @@ export function useConcerts() {
 
     socket = io(import.meta.env.VITE_API_BASE_URL)
     socket.on('concertChanged', fetchConcerts)
+    socket.on('concertUpdated', fetchConcerts)
   })
 
   onUnmounted(() => {
