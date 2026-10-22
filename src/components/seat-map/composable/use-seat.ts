@@ -52,10 +52,20 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
     seats.value = newSeats
   }
 
+  // New concert: seats are replaced, so any selection is stale
+  const handleConcertChanged = () => {
+    if (selected.value.size > 0) {
+      showNotification('場次已更換，已清除您選取的座位', 'warning', 'long')
+    }
+    reset()
+    fetchSeats()
+  }
+
   function initSocket() {
     if (socket) return
     socket = io(import.meta.env.VITE_API_BASE_URL)
     socket.on('seatUpdated', handleSeatUpdated)
+    socket.on('concertChanged', handleConcertChanged)
   }
 
   onMounted(() => {

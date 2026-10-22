@@ -70,6 +70,10 @@ export function useTicketingStatus() {
       console.log('Ticketing status changed:', newStatus)
       ticketingStatus.value = newStatus
     })
+
+    socket.on('concertChanged', () => {
+      fetchTicketingStatus()
+    })
   }
 
   const disconnectSocket = () => {

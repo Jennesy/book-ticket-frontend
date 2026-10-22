@@ -143,7 +143,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { io, Socket } from 'socket.io-client'
+import { DefaultEventsMap } from '@socket.io/component-emitter'
 import Button from '@/components/common/button.vue'
 import DataTable from '@/components/common/data-table.vue'
 import Dialog from '@/components/common/dialog.vue'
@@ -171,6 +173,7 @@ interface Reservation {
 const orderListUrl = import.meta.env.VITE_ORDER_LIST_URL
 const { adminFetch } = useAdminAuth()
 const { showNotification } = useNotification()
+let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
 const loading = ref(false)
 const orders = ref<Reservation[]>([])
@@ -263,6 +266,16 @@ const formatDateTime = (dateString: string) => {
 
 onMounted(() => {
   fetchOrders()
+
+  socket = io(import.meta.env.VITE_API_BASE_URL)
+  socket.on('concertChanged', fetchOrders)
+})
+
+onUnmounted(() => {
+  if (socket) {
+    socket.disconnect()
+    socket = null
+  }
 })
 </script>
 

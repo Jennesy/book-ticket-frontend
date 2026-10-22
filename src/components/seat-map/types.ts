@@ -6,6 +6,7 @@ export interface Seat {
   status: string
   price?: number
   reservedBy?: string
+  tag?: string
 }
 
 export interface SeatSection {
