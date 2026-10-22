@@ -14,7 +14,7 @@
       </div>
 
       <div class='flex flex-wrap items-center gap-2 mt-4'>
-        <div class='w-25 flex items-center gap-4'>
+        <div class='w-full mobile:w-[49%] tablet:w-[25%] flex items-center gap-4'>
           <Select 
             :model-value="editPropertyName"
             @update:model-value="onEditPropertyChange"
@@ -28,7 +28,7 @@
           />
         </div>
         
-        <div class='w-25 flex items-center gap-4'>
+        <div class='w-full mobile:w-[49%] tablet:w-[25%] flex items-center gap-4'>
           <Select 
             v-if="editPropertyName === 'status'"
             :model-value="editNewValue"
@@ -76,15 +76,15 @@
         <div v-if='selectedSeats.length' class='flex items-center gap-2'>
           <span class='text-sm font-medium'>已選 {{ selectedSeats.length }} 座位</span>
           <div class='flex gap-1'>
-            <span v-for="seat in selectedSeats.slice(0, 5)" :key="seat.text" 
+            <span v-for="seat in selectedSeats.slice(0, 4)" :key="seat.text" 
                   class='px-1 py-0.5 bg-blue-100 text-blue-800 text-xs rounded'>
               {{ seat.text }}
             </span>
             <span v-if="selectedSeats.length > 3" class='text-xs text-gray-500'>...</span>
           </div>
         </div>
-        <div v-if='programBookCount > 0' class='text-sm text-gray-600'>
-          節目冊 {{ programBookCount }}
+        <div v-if="programBookCount > 0 || (orderSummary?.seats?.['1200'])" class='text-sm text-gray-600'>
+          節目冊 {{ programBookCount + (orderSummary?.seats?.['1200']?.quantity || 0) }}
         </div>
       </div>
       <div class='flex items-center gap-2'>
@@ -101,22 +101,24 @@
         <div class='bg-gray-50 rounded-lg p-3'>
           <div class='flex items-center justify-between'>
             <div class='flex items-center gap-3'>
-              <Button
-                prepend-icon="mdi-minus"
-                size="x-small"
-                color='red'
-                variant="outlined"
-                :disabled="programBookCount <= 0"
-                @click="onProgramBookChange(programBookCount - 1)"
-              />
+              <div
+                class='w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-red-50 rounded-full border border-red-200 transition-colors'
+                :class="{ 'opacity-30 cursor-not-allowed': programBookCount <= 0 }"
+                @click="programBookCount > 0 && onProgramBookChange(programBookCount - 1)"
+              >
+                <v-icon size="18">mdi-minus</v-icon>
+              </div>
               <span class='w-8 text-center font-medium'>{{ programBookCount }}</span>
-              <Button
-                prepend-icon="mdi-plus"
-                size="x-small"
-                color='primary'
-                variant="outlined"
+              <div
+                class='w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-blue-50 rounded-full border border-blue-200 transition-colors'
                 @click="onProgramBookChange(programBookCount + 1)"
-              />
+              >
+                <v-icon size="18">mdi-plus</v-icon>
+              </div>
+              <div v-if="orderSummary?.seats?.['1200']" class="flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs rounded-md border border-green-200">
+                <v-icon size="14" class="mr-1">mdi-gift</v-icon>
+                送 {{ orderSummary.seats[1200].quantity }} 本
+              </div>
             </div>
             <div v-if="programBookCount && orderSummary" class='text-right'>
               <div class='flex items-center gap-2'>

@@ -26,7 +26,7 @@
       <div>團內訂票</div>
       <v-icon size='22' class='!text-gray-600 !hover:text-gray-900 cursor-pointer absolute top-0 right-0' @click='onInfoPanelOpen'>mdi-information</v-icon>
     </div>
-    <SeatMap mode='book' />
+    <SeatMap mode='book' @booking-closed='fetchTicketingStatus' />
     <InfoPanel v-if="isInfoPanelVisible" @close="onInfoPanelClose" />
   </template>
 </template>
@@ -47,7 +47,7 @@
     },
     setup() {
       const router = useRouter()
-      const { ticketingStatus, isInitialized } = useTicketingStatus()
+      const { ticketingStatus, isInitialized, fetchTicketingStatus } = useTicketingStatus()
       const isTicketingClosed = computed(() => !ticketingStatus.value.open && isInitialized.value)
       const isInfoPanelVisible = ref(false)
 
@@ -64,6 +64,7 @@
         onInfoPanelOpen,
         onInfoPanelClose,
         goToHome,
+        fetchTicketingStatus,
       }
     }
   }

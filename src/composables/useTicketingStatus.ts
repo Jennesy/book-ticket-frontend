@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
+import { useAdminAuth } from '@/composables/useAdminAuth'
 
 interface TicketingStatus {
   open: boolean
@@ -16,6 +17,7 @@ export function useTicketingStatus() {
   const loading = ref(false)
   const isInitialized = ref(false)
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
+  const { adminFetch } = useAdminAuth()
 
   const fetchTicketingStatus = async () => {
     try {
@@ -35,7 +37,7 @@ export function useTicketingStatus() {
     try {
       loading.value = true
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/settings/booking-status`, {
+      const response = await adminFetch('/api/settings/booking-status', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ open })
@@ -47,7 +49,9 @@ export function useTicketingStatus() {
         return result
       } else {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP ${response.status}`)
+        const error = new Error(errorData.message || `HTTP ${response.status}`) as Error & { status?: number }
+        error.status = response.status
+        throw error
       }
     } catch (error) {
       console.error('Failed to update ticketing status:', error)
@@ -65,6 +69,10 @@ export function useTicketingStatus() {
     socket.on('bookingStatusChanged', (newStatus: TicketingStatus) => {
       console.log('Ticketing status changed:', newStatus)
       ticketingStatus.value = newStatus
+    })
+
+    socket.on('concertChanged', () => {
+      fetchTicketingStatus()
     })
   }
 

@@ -38,7 +38,7 @@
                 <div class='text-sm'>座位 {{ item.seatNumbers.join(', ') }}</div>
                 <div class='text-gray-500 text-xs'>NT${{ price }} × {{ item.quantity }}</div>
               </div>
-              <div class='text-right'>
+              <div class='text-right flex-shrink-0'>
                 <div v-if="item.breakdown.savings > 0" class='flex items-center gap-2'>
                   <span class='text-gray-400 line-through text-sm'>NT${{ item.originalPrice }}</span>
                   <span class='font-medium'>NT${{ item.finalPrice }}</span>
@@ -58,7 +58,7 @@
           </div>
         </div>
 
-        <!-- Program Books -->
+        <!-- Program Books - Purchased -->
         <div v-if='programBookCount > 0' class='mb-3'>
           <div class='flex items-center justify-between'>
             <div>
@@ -76,6 +76,20 @@
                    class='text-xs text-green-600'>
                 團員價
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Program Books - Free Gift -->
+        <div v-if="orderSummary?.seats?.['1200']" class='mb-3'>
+          <div class='flex items-center justify-between'>
+            <div>
+              <div class='text-sm flex items-center gap-2'>
+                贈送節目冊 × {{ orderSummary.seats[1200].quantity }}
+              </div>
+            </div>
+            <div class='text-right'>
+              <div class='font-medium text-green-600'>免費</div>
             </div>
           </div>
         </div>
@@ -139,7 +153,7 @@
 </template>
 
 <script lang="ts">
-import { ref, PropType, computed } from 'vue'
+import { ref, PropType, computed, watch, watchEffect } from 'vue'
 import Dialog from '@/components/common/dialog.vue'
 import Button from '@/components/common/button.vue'
 import DatePicker from '@/components/common/date-picker.vue'
@@ -252,6 +266,10 @@ export default {
     const onDateUpdate = (value: Date) => {
       date.value = value
     }
+
+    watch(() => props.seats.length, () => {
+      emit('close')
+    })
 
     return {
       isMobile,

@@ -1,34 +1,83 @@
 // src/composables/useSeat.js
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { discountConfig, type OrderSummary, type PriceBreakdown } from '@/config/discount'
+import { useNotification } from '@/composables/useNotification'
+import { useAdminAuth } from '@/composables/useAdminAuth'
+import { SEAT_STATUS } from '@/components/seat-map/constants'
 
-let socket: Socket<DefaultEventsMap, DefaultEventsMap>
-
-export function useSeat() {
+export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   const seats = ref<Seat[]>([])
   const selected = ref<Set<string>>(new Set())
   const programBookCount = ref(0)
   const isMember = ref(true)
+  const { showNotification } = useNotification()
+  const { adminFetch } = useAdminAuth()
+  let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
   async function fetchSeats() {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
+    const res = isAdmin
+      ? await adminFetch('/api/seats')
+      : await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`)
+    if (!res.ok) return
     seats.value = await res.json()
+  }
+
+  const handleSeatUpdated = (newSeats: Seat[]) => {
+    const conflictedSeats: string[] = []
+      
+    selected.value.forEach(seatId => {
+      const newSeat = newSeats.find((seat: Seat) => `${seat.row}${seat.col}` === seatId)
+      if (newSeat && newSeat.status === SEAT_STATUS.BOOKED) {
+        conflictedSeats.push(seatId)
+      }
+    })
+    
+    // Remove conflicted seats from selection
+    if (conflictedSeats.length > 0) {
+      conflictedSeats.forEach(seatId => {
+        selected.value.delete(seatId)
+      })
+      
+      // Show notification
+      const message = conflictedSeats.length === 1 
+        ? `座位 ${conflictedSeats[0]} 已被其他人選擇，已自動取消選擇`
+        : `座位 ${conflictedSeats.join(', ')} 已被其他人選擇，已自動取消選擇`
+      
+      showNotification(message, 'warning', 'long')
+    }
+    
+    seats.value = newSeats
+  }
+
+  // New concert: seats are replaced, so any selection is stale
+  const handleConcertChanged = () => {
+    if (selected.value.size > 0) {
+      showNotification('場次已更換，已清除您選取的座位', 'warning', 'long')
+    }
+    reset()
+    fetchSeats()
   }
 
   function initSocket() {
     if (socket) return
     socket = io(import.meta.env.VITE_API_BASE_URL)
-    socket.on('seatUpdated', (newSeats) => {
-      seats.value = newSeats
-    })
+    socket.on('seatUpdated', handleSeatUpdated)
+    socket.on('concertChanged', handleConcertChanged)
   }
 
   onMounted(() => {
     fetchSeats()
     initSocket()
+  })
+
+  onUnmounted(() => {
+    if (socket) {
+      socket.disconnect()
+      socket = null
+    }
   })
 
   function toggleSeat(seat: Seat) {
@@ -47,6 +96,7 @@ export function useSeat() {
     }
     
     try {
+      reset()
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reserve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,11 +110,13 @@ export function useSeat() {
         const errorMessage = result.message || `HTTP ${res.status}: ${res.statusText}`
         const unavailableSeats = result.unavailable || []
         
-        if (unavailableSeats.length > 0) {
-          throw new Error(`${errorMessage}\n無法選擇的座位: ${unavailableSeats.join(', ')}`)
-        } else {
-          throw new Error(errorMessage)
-        }
+        const error = new Error(
+          unavailableSeats.length > 0
+            ? `${errorMessage}\n無法選擇的座位: ${unavailableSeats.join(', ')}`
+            : errorMessage
+        ) as Error & { status?: number }
+        error.status = res.status
+        throw error
       }
       
       return result
@@ -94,9 +146,16 @@ export function useSeat() {
       discountRate = discountConfig.memberDiscount.discountRate
     }
 
-    // 團購折扣
+    // 團購折扣 (有期限限制)
+    const isGroupDiscountActive = () => {
+      const now = new Date()
+      const taipeiTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }))
+      const deadline = new Date(discountConfig.groupDiscount.deadline)
+      return taipeiTime <= deadline
+    }
+
     const groupDiscount = discountConfig.groupDiscount[price]
-    if (groupDiscount && quantity >= groupDiscount.minQuantity) {
+    if (groupDiscount && quantity >= groupDiscount.minQuantity && isGroupDiscountActive()) {
       const groupDiscountPrice = price * groupDiscount.discountRate
       
       if (!memberDiscountApplies || groupDiscountPrice < finalPrice) {
@@ -222,15 +281,21 @@ export function useSeat() {
     const payload = { seats: seatsToUpdate }
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/seats`, {
+      const res = await adminFetch('/api/seats', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       
-      const result = await res.json()
-      
-      if (res.ok && result.updatedSeats?.length > 0) {
+      const result = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        const error = new Error(result.message || `HTTP ${res.status}`) as Error & { status?: number }
+        error.status = res.status
+        throw error
+      }
+
+      if (result.updatedSeats?.length > 0) {
         result.updatedSeats.forEach(updatedSeat => {
           const seatIndex = seats.value.findIndex(s => s._id === updatedSeat._id)
           if (seatIndex !== -1) {
