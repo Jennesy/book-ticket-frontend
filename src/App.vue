@@ -17,7 +17,7 @@
   <div v-else class='max-w-[1500px] mx-auto'>
     <div class='flex items-center justify-center pt-4'>
       <img src="/shimmering_vocals.png" class="h-15" alt="logo" />
-      <span class='mobile:text-2xl text-xl font-bold'>煦豐蒔光 2025 年度音樂會</span>
+      <span class='mobile:text-2xl text-xl font-bold'>煦豐蒔光音樂會票務系統</span>
     </div>
     <router-view />
   </div>
