@@ -1,5 +1,5 @@
 // src/composables/useSeat.js
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import type { Seat } from '@/components/seat-map/types'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
@@ -8,8 +8,6 @@ import { useNotification } from '@/composables/useNotification'
 import { useAdminAuth } from '@/composables/useAdminAuth'
 import { SEAT_STATUS } from '@/components/seat-map/constants'
 
-let socket: Socket<DefaultEventsMap, DefaultEventsMap>
-
 export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   const seats = ref<Seat[]>([])
   const selected = ref<Set<string>>(new Set())
@@ -17,6 +15,7 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   const isMember = ref(true)
   const { showNotification } = useNotification()
   const { adminFetch } = useAdminAuth()
+  let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
 
   async function fetchSeats() {
     const res = isAdmin
@@ -62,6 +61,13 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
   onMounted(() => {
     fetchSeats()
     initSocket()
+  })
+
+  onUnmounted(() => {
+    if (socket) {
+      socket.disconnect()
+      socket = null
+    }
   })
 
   function toggleSeat(seat: Seat) {
