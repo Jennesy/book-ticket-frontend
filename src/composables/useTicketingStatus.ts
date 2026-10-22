@@ -19,13 +19,19 @@ export function useTicketingStatus() {
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
   const { adminFetch } = useAdminAuth()
 
+  // Merge rather than replace: bookingStatusChanged only carries { open } and would drop updatedAt
+  const applyStatus = (status: Partial<TicketingStatus>) => {
+    ticketingStatus.value = { ...ticketingStatus.value, ...status }
+  }
+
   const fetchTicketingStatus = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/settings/booking-status`)
       if (response.ok) {
-        const result = await response.json()
-        ticketingStatus.value = result
-        return result
+        // activeTag is also returned; useActiveConcert keeps track of it
+        const { open, updatedAt } = await response.json()
+        applyStatus({ open, updatedAt })
+        return ticketingStatus.value
       }
     } catch (error) {
       console.error('Failed to fetch ticketing status:', error)
@@ -44,9 +50,9 @@ export function useTicketingStatus() {
       })
       
       if (response.ok) {
-        const result = await response.json()
-        ticketingStatus.value = result
-        return result
+        const { open: newOpen, updatedAt } = await response.json()
+        applyStatus({ open: newOpen, updatedAt })
+        return ticketingStatus.value
       } else {
         const errorData = await response.json().catch(() => ({}))
         const error = new Error(errorData.message || `HTTP ${response.status}`) as Error & { status?: number }
@@ -66,9 +72,9 @@ export function useTicketingStatus() {
     
     socket = io(import.meta.env.VITE_API_BASE_URL)
     
-    socket.on('bookingStatusChanged', (newStatus: TicketingStatus) => {
+    socket.on('bookingStatusChanged', (newStatus: Partial<TicketingStatus>) => {
       console.log('Ticketing status changed:', newStatus)
-      ticketingStatus.value = newStatus
+      applyStatus(newStatus)
     })
 
     socket.on('concertChanged', () => {
