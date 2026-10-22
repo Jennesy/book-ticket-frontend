@@ -74,7 +74,8 @@ export default defineComponent({
       default: 'view',
     },
   },
-  setup(props) {
+  emits: ['booking-closed'],
+  setup(props, { emit }) {
     const isLoading = ref(false)
     const isSubmitPanelVisible = ref(false)
     const isSuccessPanelVisible = ref(false)
@@ -166,6 +167,10 @@ export default defineComponent({
         const errorMessage = error instanceof Error ? error.message : '預訂失敗，請稍後再試'
         alert(errorMessage)
         isSubmitPanelVisible.value = false
+        // Backend closed booking while the user was on the page
+        if ((error as { status?: number }).status === 403) {
+          emit('booking-closed')
+        }
       } finally {
         // Reset selection regardless of success or failure
         reset()

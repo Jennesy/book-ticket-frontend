@@ -94,11 +94,13 @@ export function useSeat({ isAdmin = false }: { isAdmin?: boolean } = {}) {
         const errorMessage = result.message || `HTTP ${res.status}: ${res.statusText}`
         const unavailableSeats = result.unavailable || []
         
-        if (unavailableSeats.length > 0) {
-          throw new Error(`${errorMessage}\n無法選擇的座位: ${unavailableSeats.join(', ')}`)
-        } else {
-          throw new Error(errorMessage)
-        }
+        const error = new Error(
+          unavailableSeats.length > 0
+            ? `${errorMessage}\n無法選擇的座位: ${unavailableSeats.join(', ')}`
+            : errorMessage
+        ) as Error & { status?: number }
+        error.status = res.status
+        throw error
       }
       
       return result
