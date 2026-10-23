@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import type { ApiError } from '@/composables/useConcerts'
 
 interface TicketingStatus {
   open: boolean
@@ -55,8 +56,10 @@ export function useTicketingStatus() {
         return ticketingStatus.value
       } else {
         const errorData = await response.json().catch(() => ({}))
-        const error = new Error(errorData.message || `HTTP ${response.status}`) as Error & { status?: number }
+        const error: ApiError = new Error(errorData.message || `HTTP ${response.status}`)
         error.status = response.status
+        // Set when opening is refused because the current concert lacks payment info
+        error.missingFields = errorData.missingFields
         throw error
       }
     } catch (error) {

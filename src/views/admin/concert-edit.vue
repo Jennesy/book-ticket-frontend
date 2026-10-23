@@ -202,6 +202,7 @@ import Button from '@/components/common/button.vue'
 import { useNotification } from '@/composables/useNotification'
 import {
   useConcertApi,
+  formatInfoFields,
   SHEET_WEBHOOK_PREFIX,
   type Concert,
   type ConcertInfo,
@@ -428,10 +429,12 @@ const onSubmit = async () => {
     showNotification('已更新場次', 'success')
     goBack()
   } catch (error) {
-    const { status, message } = error as ApiError
+    const { status, message, missingFields } = error as ApiError
     if (status === 404) {
       showNotification('場次不存在', 'error')
       goBack()
+    } else if (missingFields?.length) {
+      submitError.value = `訂票開放中，不能清除：${formatInfoFields(missingFields)}。請先關閉售票`
     } else if (status !== 401) {
       submitError.value = message || '儲存失敗，請稍後再試'
     }

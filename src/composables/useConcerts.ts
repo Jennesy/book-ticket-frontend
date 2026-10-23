@@ -39,7 +39,26 @@ export interface UpdateConcertBody extends Partial<ConcertInfo> {
   sheetWebhook?: string | null
 }
 
-export type ApiError = Error & { status?: number }
+// missingFields: required fields the backend found unset when opening booking
+// or about to be cleared while booking is open
+export type ApiError = Error & { status?: number, missingFields?: (keyof ConcertInfo)[] }
+
+const INFO_FIELD_LABELS: Record<keyof ConcertInfo, string> = {
+  opentixUrl: 'OPENTIX 購票連結',
+  opentixOpenAt: 'OPENTIX 開放時間',
+  discountCode: '折扣碼',
+  groupDiscountDeadline: '團購截止日期',
+  orderListUrl: '訂單列表連結',
+  transferBankName: '銀行名稱',
+  transferBankCode: '銀行代碼',
+  transferBranchName: '分行名稱',
+  transferBranchCode: '分行代碼',
+  transferAccountNumber: '帳號',
+  transferAccountName: '戶名'
+}
+
+export const formatInfoFields = (fields: (keyof ConcertInfo)[]) =>
+  fields.map(field => INFO_FIELD_LABELS[field] ?? field).join('、')
 
 export const SHEET_WEBHOOK_PREFIX = 'https://script.google.com/macros/'
 
@@ -53,6 +72,7 @@ export function useConcertApi() {
     if (!response.ok) {
       const error: ApiError = new Error(result.message || `HTTP ${response.status}`)
       error.status = response.status
+      error.missingFields = result.missingFields
       throw error
     }
     return result
