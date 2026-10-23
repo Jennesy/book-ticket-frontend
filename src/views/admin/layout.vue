@@ -53,13 +53,21 @@ import { useRoute } from 'vue-router'
 import Button from '@/components/common/button.vue'
 import AdminKeyForm from '@/components/admin/admin-key-form.vue'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import { useActiveConcert } from '@/composables/useActiveConcert'
 
 const route = useRoute()
 const { isAuthenticated, logout } = useAdminAuth()
+const { activeTag, activeConcert } = useActiveConcert()
 
 const isMenuOpen = ref(false)
 
-const pageTitle = computed(() => route.meta.title as string | undefined)
+const pageTitle = computed(() => {
+  const title = route.meta.title as string | undefined
+  // An unnamed concert falls back to its tag
+  const concertLabel = activeConcert.value?.name || activeTag.value
+  if (route.name === 'Admin' && concertLabel) return `${title}：《${concertLabel}》`
+  return title
+})
 
 // Only 當前場次 matches exactly, so 場次管理 stays highlighted on /admin/concerts/:tag
 const navItems = [

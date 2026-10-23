@@ -18,7 +18,7 @@
     <div class='flex items-center justify-center pt-4'>
       <img src="/shimmering_vocals.png" class="h-15" alt="logo" />
       <span class='mobile:text-2xl text-xl font-bold'>
-        <span v-if='concertName'> {{ concertName }} </span>
+        <span v-if='concertName'> 《{{ concertName }}》 </span>
         <span v-else>煦豐蒔光音樂會</span>
         票務系統
       </span>
