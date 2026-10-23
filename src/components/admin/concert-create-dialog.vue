@@ -18,7 +18,7 @@
       />
       <v-text-field
         v-model="sheetWebhook"
-        label="試算表 Webhook（選填）"
+        label="訂單列表 Webhook（選填）"
         :placeholder="SHEET_WEBHOOK_PREFIX"
         variant="solo-filled"
         flat
@@ -26,7 +26,7 @@
         :error-messages="webhookError"
       />
       <div v-if="!sheetWebhook.trim()" class="text-sm text-amber-700">
-        沒有設定 Webhook 時，訂票仍會成功，但不會寫進試算表。
+        沒有設定 Webhook 時，訂票仍會成功，但不會寫進訂單列表。
       </div>
     </div>
 

@@ -32,22 +32,46 @@
         </Button>
       </div>
     </div>
+    <div
+      v-if="!ticketingStatus.open && missingFields.length"
+      class="flex items-center justify-end gap-1 mt-2 text-sm text-amber-700"
+    >
+      <v-icon size="18">mdi-alert</v-icon>
+      <span>
+        開放售票前，請先到
+        <router-link :to="{ name: 'AdminConcertEdit', params: { tag: activeTag } }" class="underline">場次管理</router-link>
+        補上 {{ formatInfoFields(missingFields) }}
+      </span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import Button from '@/components/common/button.vue'
 import { useTicketingStatus } from '@/composables/useTicketingStatus'
+import { useActiveConcert } from '@/composables/useActiveConcert'
+import { formatInfoFields, type ApiError, type ConcertInfo } from '@/composables/useConcerts'
 
 const { ticketingStatus, loading, updateTicketingStatus } = useTicketingStatus()
+const { activeTag } = useActiveConcert()
+
+// The backend decides which fields are required to open; we only show what it reports
+const missingFields = ref<(keyof ConcertInfo)[]>([])
 
 const toggleTicketingStatus = async () => {
   try {
     const newStatus = !ticketingStatus.value.open
     await updateTicketingStatus(newStatus)
+    missingFields.value = []
   } catch (error) {
+    const { status, missingFields: fields } = error as ApiError
     // 401 is already reported by adminFetch
-    if ((error as { status?: number }).status === 401) return
+    if (status === 401) return
+    if (fields?.length) {
+      missingFields.value = fields
+      return
+    }
     alert('更新售票狀態失敗，請稍後再試')
   }
 }

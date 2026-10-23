@@ -30,16 +30,16 @@
           {{ item.name || '—' }}
         </template>
 
-        <template #item.hasSheetWebhook="{ item }">
+        <template #item.missing="{ item }">
           <span
             :class="[
-              'px-2 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap',
-              item.hasSheetWebhook
-                ? 'bg-green-50 border-green-500 text-green-600'
-                : 'bg-amber-50 border-amber-500 text-amber-700'
+              'px-2 py-0.5 rounded-full text-xs font-medium border',
+              missingLabels(item).length
+                ? 'bg-amber-50 border-amber-500 text-amber-700'
+                : 'bg-green-50 border-green-500 text-green-600'
             ]"
           >
-            {{ item.hasSheetWebhook ? '已設定' : '未設定試算表' }}
+            {{ missingLabels(item).length ? `未完成：${missingLabels(item).join('、')}` : '已完成' }}
           </span>
         </template>
 
@@ -52,7 +52,7 @@
             prepend-icon="mdi-pencil"
             size="small"
             variant="text"
-            @click="openEditDialog(item)"
+            :to="{ name: 'AdminConcertEdit', params: { tag: item.tag } }"
           />
         </template>
       </DataTable>
@@ -64,12 +64,6 @@
       :active-tag="activeTag"
       @created="onCreated"
     />
-    <ConcertEditDialog
-      v-model="isEditDialogOpen"
-      :concert="editingConcert"
-      @updated="fetchConcerts"
-      @not-found="fetchConcerts"
-    />
   </div>
 </template>
 
@@ -79,23 +73,20 @@ import { useRouter } from 'vue-router'
 import Button from '@/components/common/button.vue'
 import DataTable from '@/components/common/data-table.vue'
 import ConcertCreateDialog from '@/components/admin/concert-create-dialog.vue'
-import ConcertEditDialog from '@/components/admin/concert-edit-dialog.vue'
 import { useConcerts, type Concert } from '@/composables/useConcerts'
 import { useNotification } from '@/composables/useNotification'
 import { formatTag } from '@/utils/concert-tag'
 
 const router = useRouter()
 const { showNotification } = useNotification()
-const { concerts, activeTag, loading, fetchConcerts } = useConcerts()
+const { concerts, activeTag, loading } = useConcerts()
 
 const isCreateDialogOpen = ref(false)
-const isEditDialogOpen = ref(false)
-const editingConcert = ref<Concert | null>(null)
 
 const headers = [
   { title: '日期', key: 'tag', sortable: false, width: '160px' },
   { title: '名稱', key: 'name', sortable: false },
-  { title: '試算表', key: 'hasSheetWebhook', sortable: false, width: '120px' },
+  { title: '設定狀態', key: 'missing', sortable: false },
   { title: '建立時間', key: 'createdAt', sortable: false, width: '180px' },
   { title: '操作', key: 'actions', sortable: false, width: '80px' }
 ]
@@ -104,13 +95,18 @@ const formatDateTime = (dateString: string) => {
   return new Date(dateString).toLocaleString('zh-TW')
 }
 
-const openEditDialog = (concert: Concert) => {
-  editingConcert.value = concert
-  isEditDialogOpen.value = true
-}
+// Fields left blank on purpose (e.g. no group discount) still show, as a reminder to double-check
+const missingLabels = (concert: Concert) => [
+  !concert.hasSheetWebhook && '訂單列表 Webhook',
+  !(concert.opentixUrl && concert.opentixOpenAt) && 'OPENTIX',
+  !concert.discountCode && '折扣碼',
+  !concert.groupDiscountDeadline && '團購截止',
+  !concert.orderListUrl && '訂單列表連結',
+  !(concert.transferBankName && concert.transferBankCode && concert.transferBranchName && concert.transferBranchCode && concert.transferAccountNumber && concert.transferAccountName) && '匯款帳戶'
+].filter((label): label is string => !!label)
 
 const onCreated = () => {
-  showNotification('已建立場次，訂票已關閉。請檢查座位配置後再開放訂票', 'success', 'long')
+  showNotification('已建立場次，訂票已關閉。請檢查座位配置，並在場次管理補上 OPENTIX 等資訊後再開放訂票', 'success', 'long')
   router.push({ name: 'Admin' })
 }
 </script>
