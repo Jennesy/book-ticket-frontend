@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import type { ApiError } from '@/composables/useConcerts'
 
 interface TicketingStatus {
   open: boolean
@@ -19,13 +20,19 @@ export function useTicketingStatus() {
   let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
   const { adminFetch } = useAdminAuth()
 
+  // Merge rather than replace: bookingStatusChanged only carries { open } and would drop updatedAt
+  const applyStatus = (status: Partial<TicketingStatus>) => {
+    ticketingStatus.value = { ...ticketingStatus.value, ...status }
+  }
+
   const fetchTicketingStatus = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/settings/booking-status`)
       if (response.ok) {
-        const result = await response.json()
-        ticketingStatus.value = result
-        return result
+        // activeTag is also returned; useActiveConcert keeps track of it
+        const { open, updatedAt } = await response.json()
+        applyStatus({ open, updatedAt })
+        return ticketingStatus.value
       }
     } catch (error) {
       console.error('Failed to fetch ticketing status:', error)
@@ -44,13 +51,15 @@ export function useTicketingStatus() {
       })
       
       if (response.ok) {
-        const result = await response.json()
-        ticketingStatus.value = result
-        return result
+        const { open: newOpen, updatedAt } = await response.json()
+        applyStatus({ open: newOpen, updatedAt })
+        return ticketingStatus.value
       } else {
         const errorData = await response.json().catch(() => ({}))
-        const error = new Error(errorData.message || `HTTP ${response.status}`) as Error & { status?: number }
+        const error: ApiError = new Error(errorData.message || `HTTP ${response.status}`)
         error.status = response.status
+        // Set when opening is refused because the current concert lacks payment info
+        error.missingFields = errorData.missingFields
         throw error
       }
     } catch (error) {
@@ -66,9 +75,9 @@ export function useTicketingStatus() {
     
     socket = io(import.meta.env.VITE_API_BASE_URL)
     
-    socket.on('bookingStatusChanged', (newStatus: TicketingStatus) => {
+    socket.on('bookingStatusChanged', (newStatus: Partial<TicketingStatus>) => {
       console.log('Ticketing status changed:', newStatus)
-      ticketingStatus.value = newStatus
+      applyStatus(newStatus)
     })
 
     socket.on('concertChanged', () => {

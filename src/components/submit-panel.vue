@@ -13,9 +13,10 @@
         v-model="userName"
       ></v-text-field>
       <date-picker
+        v-model="date"
         :rules="rules.date"
+        :min="today"
         label="預計匯款日期"
-        @update='onDateUpdate'
       ></date-picker>
       <v-text-field
         :rules="rules.account"
@@ -159,6 +160,7 @@ import Button from '@/components/common/button.vue'
 import DatePicker from '@/components/common/date-picker.vue'
 import DiscountPrice from '@/components/common/discount-price.vue'
   import { useWindowSize } from '@/composables/useWindowSize'
+import { startOfToday } from '@/utils/date'
 import type { Seat } from '@/components/seat-map/types'
 
 export default {
@@ -189,15 +191,16 @@ export default {
   setup(props, { emit }) {
     const { isMobile } = useWindowSize()
     const userName = ref('')
-    const date = ref(new Date())
+    const date = ref<Date | null>(new Date())
+    const today = startOfToday()
     const account = ref('')
 
-    const isDateValid = (date: Date) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Still checked on submit: the page may stay open past midnight
+    const isDateValid = (date: Date | null) => {
+      if (!date) return false
       const selected = new Date(date);
       selected.setHours(0, 0, 0, 0);
-      return selected >= today;
+      return selected >= startOfToday();
     }
 
     const rules = {
@@ -214,9 +217,10 @@ export default {
         },
       ],
       date: [
-        (value: Date) => {
-          if (!value) return '必須輸入預計匯款日期'
-          if (isDateValid(value)) return true
+        // Validate the Date model, not the field's locale-formatted text
+        () => {
+          if (!date.value) return '必須輸入預計匯款日期'
+          if (isDateValid(date.value)) return true
           return '匯款日期不能早於今天'
         },
       ],
@@ -263,10 +267,6 @@ export default {
       return seats
     })
 
-    const onDateUpdate = (value: Date) => {
-      date.value = value
-    }
-
     watch(() => props.seats.length, () => {
       emit('close')
     })
@@ -275,6 +275,7 @@ export default {
       isMobile,
       userName,
       date,
+      today,
       account,
       canSubmit,
       rules,
@@ -282,7 +283,6 @@ export default {
       formattedSeats,
       onClose,
       onSubmit,
-      onDateUpdate,
     }
   },
 }

@@ -73,6 +73,11 @@ export default defineComponent({
       type: String as PropType<SeatMapMode>,
       default: 'view',
     },
+    // Show an archived concert instead of the current one (admin only)
+    tag: {
+      type: String,
+      default: undefined,
+    },
   },
   emits: ['booking-closed'],
   setup(props, { emit }) {
@@ -97,7 +102,10 @@ export default defineComponent({
       toggleSeat,
       reset,
       editSelectedSeats,
-    } = useSeat({ isAdmin: props.mode === 'edit' })
+    } = useSeat({
+      isAdmin: props.mode === 'edit' || !!props.tag,
+      tag: props.tag === undefined ? undefined : () => props.tag,
+    })
     const { showNotification } = useNotification()
 
     const selectedSeatLabels = computed(() => selectedSeats.value.map(s => `${s.row}${s.col}`))

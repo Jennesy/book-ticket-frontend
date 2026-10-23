@@ -1,19 +1,11 @@
 <template>
   <div class="order-list pa-4">
-    <div class="d-flex justify-space-between align-center mb-4 flex-wrap gap-2">
+    <!-- Archived orders can't be deleted, so the hint is only for the current concert -->
+    <div v-if="!readonly" class="mb-4">
       <span class="text-sm text-gray-500 flex items-center flex-wrap gap-1">
         <v-icon>mdi-alert-circle</v-icon>
-        如果刪除訂單，請手動到<a :href='orderListUrl' target='_blank'>訂單列表</a>備註更新狀態
+        如果刪除訂單，請手動到<a v-if='orderListUrl' :href='orderListUrl' target='_blank'>訂單列表</a><span v-else>訂單列表</span>備註更新狀態
       </span>
-      <Button
-        class="shrink-0"
-        color="primary"
-        @click="refreshOrders"
-        :loading="loading"
-        prepend-icon="mdi-refresh"
-      >
-        重新整理
-      </Button>
     </div>
     <div class="overflow-x-auto">
       <DataTable
@@ -71,7 +63,7 @@
               @click="viewOrder(item)"
             />
             <Button
-              v-if="!item.isDeleted"
+              v-if="!item.isDeleted && !readonly"
               prepend-icon="mdi-delete"
               size="small"
               variant="text"
@@ -143,13 +135,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import Button from '@/components/common/button.vue'
 import DataTable from '@/components/common/data-table.vue'
 import Dialog from '@/components/common/dialog.vue'
 import { useAdminAuth } from '@/composables/useAdminAuth'
+import { useActiveConcert } from '@/composables/useActiveConcert'
 import { useNotification } from '@/composables/useNotification'
 
 interface Seat {
@@ -170,7 +163,15 @@ interface Reservation {
   deletedAt?: string
   originalReservationId?: string
 }
-const orderListUrl = import.meta.env.VITE_ORDER_LIST_URL
+const props = defineProps<{
+  // Show an archived concert's orders instead of the current one
+  tag?: string
+  readonly?: boolean
+}>()
+
+// Only shown outside readonly, i.e. for the current concert
+const { activeConcert } = useActiveConcert()
+const orderListUrl = computed(() => activeConcert.value?.orderListUrl)
 const { adminFetch } = useAdminAuth()
 const { showNotification } = useNotification()
 let socket: Socket<DefaultEventsMap, DefaultEventsMap> | null = null
@@ -199,10 +200,12 @@ const headers = [
   { title: '操作', key: 'actions', sortable: false, width: '120px' }
 ]
 
-const fetchOrders = async () => {
-  loading.value = true
+// silent: refresh in place without the table's loading state
+const fetchOrders = async ({ silent = false } = {}) => {
+  if (!silent) loading.value = true
   try {
-    const response = await adminFetch('/api/reserve')
+    const path = props.tag ? `/api/reserve?tag=${encodeURIComponent(props.tag)}` : '/api/reserve'
+    const response = await adminFetch(path)
     if (response.ok) {
       orders.value = await response.json()
     }
@@ -211,10 +214,6 @@ const fetchOrders = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const refreshOrders = () => {
-  fetchOrders()
 }
 
 const viewOrder = (order: Reservation) => {
@@ -267,9 +266,18 @@ const formatDateTime = (dateString: string) => {
 onMounted(() => {
   fetchOrders()
 
-  socket = io(import.meta.env.VITE_API_BASE_URL)
-  socket.on('concertChanged', fetchOrders)
+  // A tag view is a fixed archived concert, so it ignores concert switches
+  if (!props.tag) {
+    socket = io(import.meta.env.VITE_API_BASE_URL)
+    socket.on('concertChanged', () => fetchOrders())
+    // A new reservation or seat edit also means orders may have changed
+    socket.on('seatUpdated', () => fetchOrders({ silent: true }))
+    // Catch up on orders made while disconnected (there is no manual refresh)
+    socket.io.on('reconnect', () => fetchOrders({ silent: true }))
+  }
 })
+
+watch(() => props.tag, () => fetchOrders())
 
 onUnmounted(() => {
   if (socket) {

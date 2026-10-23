@@ -17,9 +17,12 @@
     <template v-if="$slots.prepend" #prepend>
       <slot name="prepend" />
     </template>
-    
-    <slot />
-    
+
+    <!-- Only pass a default slot when given: v-btn shows `icon` only without one -->
+    <template v-if="$slots.default" #default>
+      <slot />
+    </template>
+
     <template v-if="$slots.append" #append>
       <slot name="append" />
     </template>
